@@ -12,9 +12,12 @@ const css = `
 *{box-sizing:border-box;margin:0;padding:0;}
 body{background:${G.bg};color:${G.text};font-family:'DM Sans',sans-serif;}
 .root{max-width:1100px;margin:0 auto;padding:40px 32px 60px;}
+.motto{text-align:center;padding:48px 24px 40px;max-width:520px;margin:0 auto;}
+.motto p{font-family:'DM Sans',sans-serif;font-size:17px;font-weight:400;color:${G.muted};line-height:1.8;letter-spacing:0.2px;}
+.motto-kicker{font-weight:500!important;color:rgba(0,212,255,.6)!important;}
 .hero{padding:32px 0 28px;border-bottom:1px solid ${G.border};margin-bottom:28px;}
 .hero-tag{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:4px;color:${G.cyan};text-transform:uppercase;margin-bottom:12px;}
-.hero h1{font-family:'Syne',sans-serif;font-size:36px;font-weight:800;color:#e8f2ff;line-height:1.2;margin-bottom:10px;}
+.hero h1{font-family:'Inter',sans-serif;font-size:36px;font-weight:800;color:#e8f2ff;line-height:1.2;margin-bottom:10px;}
 .hero p{font-size:15px;color:${G.muted};max-width:620px;line-height:1.6;}
 .arch-tabs{display:flex;gap:3px;margin-bottom:28px;background:${G.surface};padding:4px;border-radius:10px;border:1px solid ${G.border};}
 .arch-tab{flex:1;padding:11px 14px;border-radius:7px;border:none;background:transparent;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;color:${G.muted};}
@@ -23,15 +26,15 @@ body{background:${G.bg};color:${G.text};font-family:'DM Sans',sans-serif;}
 .arch-intro{border-radius:12px;padding:18px 22px;margin-bottom:24px;font-size:15px;line-height:1.7;}
 .ai-cyan{background:rgba(0,212,255,.04);border:1px solid rgba(0,212,255,.18);}
 .ai-purple{background:rgba(168,85,247,.04);border:1px solid rgba(168,85,247,.18);}
-.ai-strong-cyan{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;display:block;margin-bottom:6px;color:${G.cyan};}
-.ai-strong-purple{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;display:block;margin-bottom:6px;color:${G.purple};}
+.ai-strong-cyan{font-family:'Inter',sans-serif;font-size:14px;font-weight:700;display:block;margin-bottom:6px;color:${G.cyan};}
+.ai-strong-purple{font-family:'Inter',sans-serif;font-size:14px;font-weight:700;display:block;margin-bottom:6px;color:${G.purple};}
 .sec-label{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:${G.muted};margin:28px 0 14px;display:flex;align-items:center;gap:10px;}
 .sec-label::after{content:'';flex:1;height:1px;background:${G.border};}
 .layer-card{border:1px solid ${G.border};border-radius:12px;margin-bottom:10px;overflow:hidden;transition:border-color .2s;}
 .layer-header{display:flex;align-items:center;gap:12px;padding:16px 22px;cursor:pointer;background:${G.card};user-select:none;}
 .layer-num{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;padding:4px 9px;border-radius:6px;flex-shrink:0;}
 .layer-title-wrap{flex:1;}
-.layer-name{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:#d8eaf8;margin-bottom:2px;}
+.layer-name{font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:#d8eaf8;margin-bottom:2px;}
 .layer-subtitle{font-size:13px;color:${G.muted};}
 .layer-arrow{font-size:14px;color:${G.muted};transition:transform .2s;flex-shrink:0;}
 .layer-arrow.open{transform:rotate(180deg);}
@@ -45,13 +48,13 @@ body{background:${G.bg};color:${G.text};font-family:'DM Sans',sans-serif;}
 .impl-dot{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;flex-shrink:0;}
 .impl-line{width:2px;flex:1;min-height:16px;}
 .impl-content{padding:2px 0 20px;flex:1;}
-.impl-title{font-size:14px;font-weight:700;color:#c8dff0;margin-bottom:5px;font-family:'Syne',sans-serif;}
+.impl-title{font-size:14px;font-weight:700;color:#c8dff0;margin-bottom:5px;font-family:'Inter',sans-serif;}
 .impl-desc{font-size:13px;color:${G.muted};line-height:1.65;}
 .code-block{background:#060a10;border:1px solid ${G.border};border-radius:8px;padding:13px 15px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:#7ab8d4;line-height:1.75;overflow-x:auto;margin-top:9px;white-space:pre;}
 .tools-grid{display:flex;flex-direction:column;gap:9px;}
 .tool-card{background:${G.faint};border:1px solid ${G.border};border-radius:8px;padding:13px 15px;}
 .tool-header{display:flex;align-items:center;gap:8px;margin-bottom:7px;flex-wrap:wrap;}
-.tool-name{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:#d8eaf8;}
+.tool-name{font-family:'Inter',sans-serif;font-size:15px;font-weight:700;color:#d8eaf8;}
 .tool-role{font-family:'IBM Plex Mono',monospace;font-size:10px;padding:2px 7px;border-radius:4px;letter-spacing:1px;}
 .tool-what{font-size:13px;color:${G.muted};line-height:1.6;margin-bottom:7px;}
 .tool-why{font-size:13px;color:#2a5040;padding:8px 11px;background:rgba(34,211,160,.05);border-radius:6px;border-left:2px solid rgba(34,211,160,.35);line-height:1.6;}
@@ -62,7 +65,7 @@ body{background:${G.bg};color:${G.text};font-family:'DM Sans',sans-serif;}
 .arch-diagram-wrap{margin-bottom:28px;border:1px solid ${G.border};border-radius:12px;overflow:hidden;background:${G.surface};padding:16px;}
 .arch-diagram-svg{width:100%;height:auto;}
 .arch-tooltip{margin-top:12px;padding:12px 16px;background:${G.card};border:1px solid ${G.border};border-radius:8px;font-size:12px;line-height:1.6;color:${G.muted};}
-.arch-tooltip strong{color:${G.text};font-family:'Syne',sans-serif;font-size:14px;display:block;margin-bottom:4px;}
+.arch-tooltip strong{color:${G.text};font-family:'Inter',sans-serif;font-size:14px;display:block;margin-bottom:4px;}
 @keyframes dash-flow{from{stroke-dashoffset:20}to{stroke-dashoffset:0}}
 .cost-section{margin-top:28px;}
 .cost-toggle{display:flex;align-items:center;gap:10px;cursor:pointer;padding:14px 0;user-select:none;}
@@ -72,7 +75,7 @@ body{background:${G.bg};color:${G.text};font-family:'DM Sans',sans-serif;}
 .cost-arrow.open{transform:rotate(180deg);}
 .cost-body{padding:0 0 20px;}
 .cost-tier{margin-bottom:24px;}
-.cost-tier-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:${G.text};margin-bottom:14px;}
+.cost-tier-title{font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:${G.text};margin-bottom:14px;}
 .cost-table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:13px;}
 .cost-table th{text-align:left;padding:8px 12px;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:${G.muted};border-bottom:1px solid ${G.border};}
 .cost-table td{padding:8px 12px;border-bottom:1px solid ${G.faint};color:${G.text};}
@@ -83,7 +86,7 @@ body{background:${G.bg};color:${G.text};font-family:'DM Sans',sans-serif;}
 .cost-human-row{display:flex;justify-content:space-between;margin-bottom:6px;font-size:13px;}
 .cost-human-label{color:${G.muted};}
 .cost-human-value{color:${G.text};font-weight:600;}
-.cost-total{border-radius:10px;padding:16px 20px;margin-top:16px;font-family:'Syne',sans-serif;}
+.cost-total{border-radius:10px;padding:16px 20px;margin-top:16px;font-family:'Inter',sans-serif;}
 .cost-total-label{font-size:11px;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;}
 .cost-total-value{font-size:18px;font-weight:800;color:#e8f2ff;}
 .cost-total-detail{font-size:12px;color:${G.muted};margin-top:4px;}
@@ -1093,7 +1096,7 @@ export default function ArchitectureDeepDive() {
   useEffect(() => {
     const link = document.createElement("link");
     link.rel = "stylesheet";
-    link.href = "https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap";
+    link.href = "https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Inter:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap";
     document.head.appendChild(link);
     return () => document.head.removeChild(link);
   }, []);
@@ -1103,6 +1106,11 @@ export default function ArchitectureDeepDive() {
     <>
       <style>{css}</style>
       <div className="root">
+        <div className="motto">
+          <p>The contract says &lsquo;we won&rsquo;t look at your data.&rsquo;</p>
+          <p>The architecture says &lsquo;we can&rsquo;t.&rsquo;</p>
+          <p className="motto-kicker">That&rsquo;s the difference.</p>
+        </div>
         <div className="hero">
           <div className="hero-tag">Full Stack Deep Dive</div>
           <h1>Every Layer. Every Tool.<br />Every Implementation Step.</h1>
