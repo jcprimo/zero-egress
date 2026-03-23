@@ -67,7 +67,39 @@ body{background:${G.bg};color:${G.text};font-family:'DM Sans',sans-serif;}
 .arch-tooltip{margin-top:12px;padding:12px 16px;background:${G.card};border:1px solid ${G.border};border-radius:8px;font-size:12px;line-height:1.6;color:${G.muted};}
 .arch-tooltip strong{color:${G.text};font-family:'Inter',sans-serif;font-size:14px;display:block;margin-bottom:4px;}
 @keyframes dash-flow{from{stroke-dashoffset:20}to{stroke-dashoffset:0}}
+.audience-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:28px;}
+.audience-card{background:${G.faint};border:1px solid ${G.border};border-radius:10px;padding:16px 18px;}
+.audience-icon{font-size:20px;margin-bottom:8px;}
+.audience-title{font-family:'Inter',sans-serif;font-size:14px;font-weight:700;color:${G.text};margin-bottom:6px;}
+.audience-desc{font-size:13px;color:${G.muted};line-height:1.5;}
+.case-card{border:1px solid ${G.border};border-radius:10px;margin-bottom:8px;overflow:hidden;}
+.case-header{display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;background:${G.card};}
+.case-tag{font-family:'IBM Plex Mono',monospace;font-size:9px;padding:3px 8px;border-radius:4px;letter-spacing:1px;background:rgba(245,158,11,.12);color:${G.amber};white-space:nowrap;}
+.case-title{font-family:'Inter',sans-serif;font-size:14px;font-weight:600;color:${G.text};}
+.case-body{padding:16px 18px;background:${G.surface};font-size:13px;color:${G.muted};line-height:1.7;border-top:1px solid ${G.border};}
+.decision-tree{background:${G.surface};border:1px solid ${G.border};border-radius:12px;padding:20px;margin-bottom:12px;}
+.decision-q{font-family:'Inter',sans-serif;font-size:15px;font-weight:600;color:${G.text};margin-bottom:14px;}
+.decision-opts{display:flex;gap:8px;flex-wrap:wrap;}
+.decision-opt{padding:10px 18px;border-radius:8px;border:1px solid ${G.border};background:${G.faint};color:${G.text};font-size:13px;cursor:pointer;transition:all .2s;}
+.decision-opt:hover{border-color:${G.cyan};color:${G.cyan};}
+.decision-result{margin-top:16px;padding:14px 18px;border-radius:8px;font-size:14px;font-weight:600;}
+.decision-back{margin-top:12px;padding:6px 14px;border-radius:6px;border:1px solid ${G.border};background:transparent;color:${G.muted};font-size:12px;cursor:pointer;}
+.decision-back:hover{color:${G.text};}
+.compare-table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:13px;}
+.compare-table th{text-align:left;padding:8px 12px;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:${G.muted};border-bottom:1px solid ${G.border};}
+.compare-table td{padding:8px 12px;border-bottom:1px solid ${G.faint};color:${G.text};}
+.collapsible-section{margin-bottom:4px;}
+.collapsible-toggle{display:flex;align-items:center;gap:10px;cursor:pointer;padding:14px 0;user-select:none;}
+.collapsible-label{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:${G.muted};}
+.collapsible-label::after{content:'';flex:1;height:1px;background:${G.border};}
+.collapsible-arrow{font-size:14px;color:${G.muted};transition:transform .2s;}
+.collapsible-arrow.open{transform:rotate(180deg);}
+.collapsible-body{padding:0 0 20px;}
 .cost-section{margin-top:28px;}
+@media(max-width:600px){
+  .audience-grid{grid-template-columns:1fr;}
+  .decision-opts{flex-direction:column;}
+}
 .cost-toggle{display:flex;align-items:center;gap:10px;cursor:pointer;padding:14px 0;user-select:none;}
 .cost-toggle-label{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:${G.muted};}
 .cost-toggle-label::after{content:'';flex:1;height:1px;background:${G.border};}
@@ -786,6 +818,207 @@ result = client.agents.run(
   },
 ];
 
+// ─── Audience Data ────────────────────────────────────────────────────────────
+
+const AUDIENCE = [
+  {
+    icon: "🏗",
+    title: "CTOs & Engineering Leaders",
+    desc: "Evaluating whether on-prem AI is feasible for your org. Understand the real costs, components, and trade-offs before committing.",
+  },
+  {
+    icon: "🔒",
+    title: "Security & Compliance Teams",
+    desc: "Need to understand what 'zero egress' actually means architecturally. Data sovereignty, PII protection, and regulatory compliance for AI workloads.",
+  },
+  {
+    icon: "⚙",
+    title: "Infrastructure Engineers",
+    desc: "Building or maintaining on-prem AI systems. Learn the stack: Kafka, Qdrant, vLLM, Kubernetes, and how they connect.",
+  },
+  {
+    icon: "🚀",
+    title: "Technical Founders",
+    desc: "Exploring AI-powered products without third-party API dependency. Understand what it takes to own your inference stack.",
+  },
+];
+
+// ─── Sovereignty Case Studies ──────────────────────────────────────────────────
+
+const CASE_STUDIES = [
+  {
+    tag: "EU · 2020",
+    title: "Schrems II",
+    body: "The EU Court of Justice struck down the EU-US Privacy Shield agreement, ruling that US surveillance laws made data transfers to the US incompatible with EU fundamental rights. Companies using US-based cloud services for EU citizen data faced immediate legal exposure. For organizations that needed a clear answer rather than a legal grey area, on-prem became the only bulletproof architecture. The case remains the single most consequential event in data sovereignty law.",
+  },
+  {
+    tag: "China · 2021",
+    title: "China Data Security Law",
+    body: "China's Data Security Law and Personal Information Protection Law require data collected about Chinese citizens to remain within Chinese borders. Even Apple had to comply: the company built a dedicated data center in Guizhou, managed by a state-owned enterprise, specifically for iCloud data belonging to mainland China users. If your product serves Chinese users, a local deployment is not optional. It is a legal requirement enforced at the corporate level.",
+  },
+  {
+    tag: "Russia · 2015",
+    title: "Russia Data Localization Law",
+    body: "Russia's Federal Law No. 242-FZ required all personal data of Russian citizens to be stored and processed on servers physically located within Russia. LinkedIn refused to comply. Roskomnadzor, the Russian communications regulator, blocked the service entirely in September 2016. LinkedIn remains blocked in Russia to this day. The case illustrates that data localization laws are actively enforced and the cost of non-compliance is market exclusion.",
+  },
+  {
+    tag: "US Healthcare",
+    title: "HIPAA and AI Providers",
+    body: "HIPAA requires covered entities to sign a Business Associate Agreement (BAA) with any third party that processes Protected Health Information. Most AI API providers do not offer BAAs that satisfy HIPAA requirements for clinical data. This means a hospital cannot legally send patient records, clinical notes, or diagnostic data to OpenAI or similar services without significant legal exposure. For healthcare AI, on-prem inference is not a preference. It is the only compliant option.",
+  },
+  {
+    tag: "US Defense",
+    title: "ITAR and Classified Networks",
+    body: "The International Traffic in Arms Regulations govern the export of defense-related materials and technical data. Any AI system processing ITAR-controlled information must operate on infrastructure with no path to unauthorized disclosure. Classified and controlled unclassified networks are air-gapped by requirement. Cloud AI APIs are categorically incompatible with this environment. Zero egress is not an architectural preference in defense contexts. It is a federal legal requirement.",
+  },
+  {
+    tag: "Saudi Arabia · 2023",
+    title: "Saudi NDMO Data Residency",
+    body: "Saudi Arabia's National Data Management Office issued regulations requiring government data to be processed within the Kingdom. Major consulting firms and technology vendors operating under Saudi government contracts built local data centers and on-prem deployments specifically to remain eligible for these contracts. As Gulf Cooperation Council countries strengthen data sovereignty frameworks, on-prem AI deployments are increasingly a prerequisite for government and enterprise contracts in the region.",
+  },
+];
+
+// ─── Decision Trees ────────────────────────────────────────────────────────────
+
+const TREE_INFERENCE = {
+  label: "Which inference server do you need?",
+  start: "q_users",
+  nodes: {
+    q_users: {
+      q: "How many concurrent users will be hitting the model?",
+      opts: [
+        { label: "Fewer than 20", next: "ollama" },
+        { label: "20 to 100", next: "q_lora_mid" },
+        { label: "More than 100", next: "vllm" },
+      ],
+    },
+    q_lora_mid: {
+      q: "Do you need per-user or per-tenant LoRA adapter support?",
+      opts: [
+        { label: "Yes, multi-LoRA", next: "vllm" },
+        { label: "No", next: "q_gpu_mid" },
+      ],
+    },
+    q_gpu_mid: {
+      q: "What GPU hardware do you have?",
+      opts: [
+        { label: "Consumer (RTX 4090 or similar)", next: "llamaserver" },
+        { label: "Data center (A100 / H100)", next: "vllm" },
+      ],
+    },
+    ollama: { result: "Ollama", color: G.green, detail: "Best for small teams and development. Zero-config, single pull command, OpenAI-compatible API. Handles GPU memory and model loading automatically. Not optimized for concurrent load." },
+    llamaserver: { result: "llama-server (llama.cpp)", color: G.cyan, detail: "Best for mid-scale deployments on consumer hardware. Maximum tokens/second on a single GPU, fine-grained memory control, native Anthropic Messages API. Run with --parallel 4 for concurrency." },
+    vllm: { result: "vLLM", color: G.purple, detail: "Best for production multi-user workloads on data center GPUs. PagedAttention eliminates memory fragmentation, continuous batching maximizes throughput, native multi-LoRA support for tenant isolation." },
+  },
+};
+
+const TREE_KUBERNETES = {
+  label: "Do you need Kubernetes?",
+  start: "q_services",
+  nodes: {
+    q_services: {
+      q: "How many services are in your stack?",
+      opts: [
+        { label: "Fewer than 5", next: "compose_simple" },
+        { label: "5 to 15", next: "q_gpu_nodes" },
+        { label: "More than 15", next: "kubernetes" },
+      ],
+    },
+    q_gpu_nodes: {
+      q: "Are you running inference across multiple GPU machines?",
+      opts: [
+        { label: "Yes, multiple GPU nodes", next: "kubernetes" },
+        { label: "No, single node", next: "q_multitenant" },
+      ],
+    },
+    q_multitenant: {
+      q: "Is this a multi-tenant deployment with isolated workloads per tenant?",
+      opts: [
+        { label: "Yes", next: "kubernetes" },
+        { label: "No, single-tenant", next: "compose_monitored" },
+      ],
+    },
+    compose_simple: { result: "Docker Compose", color: G.green, detail: "Simple, fast, sufficient. One YAML file to define all services. No scheduler overhead. Use when you have a small service count and a single server." },
+    compose_monitored: { result: "Docker Compose + Prometheus/Grafana", color: G.cyan, detail: "Docker Compose for orchestration, Prometheus and Grafana for visibility. Add cAdvisor for container metrics. A practical production setup for single-server multi-service deployments." },
+    kubernetes: { result: "Kubernetes", color: G.purple, detail: "Required for multi-GPU scheduling, tenant isolation at the pod level, automatic failover, and horizontal scaling. Use the NVIDIA GPU Operator for automated driver and resource management. Accept the operational complexity as the cost of scale." },
+  },
+};
+
+const TREE_VECTORDB = {
+  label: "Which vector database should you use?",
+  start: "q_scale",
+  nodes: {
+    q_scale: {
+      q: "How many vectors will you store at peak?",
+      opts: [
+        { label: "Fewer than 1 million", next: "q_pg" },
+        { label: "1 million to 100 million", next: "qdrant" },
+        { label: "More than 100 million", next: "q_massive" },
+      ],
+    },
+    q_pg: {
+      q: "Are you already running PostgreSQL?",
+      opts: [
+        { label: "Yes, and scale is small", next: "pgvector" },
+        { label: "No", next: "q_hybrid_small" },
+      ],
+    },
+    q_hybrid_small: {
+      q: "Do you need hybrid search (vector similarity + metadata filters)?",
+      opts: [
+        { label: "Yes", next: "qdrant" },
+        { label: "No, simple similarity only", next: "chroma" },
+      ],
+    },
+    q_massive: {
+      q: "Do you need distributed clustering across multiple nodes?",
+      opts: [
+        { label: "Yes", next: "milvus" },
+        { label: "No, single node is fine", next: "qdrant" },
+      ],
+    },
+    chroma: { result: "ChromaDB", color: G.green, detail: "Best for prototyping and small-scale deployments. In-process Python library or lightweight server. No separate infrastructure to manage. Swap to Qdrant when you outgrow it with minimal code changes." },
+    pgvector: { result: "pgvector", color: G.blue, detail: "Best when you are already operating PostgreSQL and want to minimize infrastructure sprawl. Adds vector similarity search as a SQL column type. Join vector results against relational metadata in a single query." },
+    qdrant: { result: "Qdrant", color: G.cyan, detail: "Best all-around choice for production deployments. Rust-based, fast, supports rich metadata payload filtering, sparse vectors for hybrid search, named collections for namespace isolation. Apache 2.0 licensed. Self-hostable." },
+    milvus: { result: "Milvus", color: G.purple, detail: "Best for massive scale requiring distributed clustering. Supports 100M+ vectors across a cluster of nodes. More operational complexity than Qdrant. Apache 2.0 licensed." },
+  },
+};
+
+// ─── Comparison Table Data ─────────────────────────────────────────────────────
+
+const COMPARE_TABLES = [
+  {
+    title: "Embedding Models",
+    rows: [
+      { cols: ["nomic-embed-text", "768", "No", "Fast", "English-only, general purpose. Best quality-to-speed default."] },
+      { cols: ["BGE-M3", "1024", "Yes (100+ langs)", "Medium", "Multi-language deployments. Hybrid dense+sparse from one model."] },
+      { cols: ["E5-large-v2", "1024", "Limited", "Medium", "Academic and research workloads. Strong on BEIR benchmarks."] },
+      { cols: ["GTE-large", "1024", "Yes", "Fast", "Balanced performance. Good default when BGE-M3 is too heavy."] },
+    ],
+    headers: ["Model", "Dimensions", "Multilingual", "Speed", "Best For"],
+  },
+  {
+    title: "LLM Models for On-Prem",
+    rows: [
+      { cols: ["Llama 3.3 70B", "70B", "140GB FP16", "~35GB Q4", "General purpose, strong reasoning and instruction following."] },
+      { cols: ["Qwen 2.5 72B", "72B", "144GB FP16", "~36GB Q4", "Code and multilingual tasks. Strong on technical benchmarks."] },
+      { cols: ["Mistral Large", "123B", "246GB FP16", "~62GB Q4", "Enterprise contexts requiring long context and broad capability."] },
+      { cols: ["Phi-3 Medium", "14B", "28GB FP16", "~8GB Q4", "Resource-constrained deployments. Capable above its size class."] },
+    ],
+    headers: ["Model", "Parameters", "Min VRAM (FP16)", "Quantized VRAM (Q4)", "Best For"],
+  },
+  {
+    title: "Vector Databases",
+    rows: [
+      { cols: ["Qdrant", "Apache 2.0", "Yes", "Yes", "Production, multi-tenant. Best default choice."] },
+      { cols: ["ChromaDB", "Apache 2.0", "No", "Limited", "Prototyping, small scale. Minimal setup friction."] },
+      { cols: ["pgvector", "PostgreSQL License", "Via PG", "Via SQL", "Already running PostgreSQL. Minimize infra complexity."] },
+      { cols: ["Milvus", "Apache 2.0", "Yes", "Yes", "Massive scale (100M+ vectors) requiring clustering."] },
+    ],
+    headers: ["Database", "License", "Clustering", "Hybrid Search", "Best For"],
+  },
+];
+
 // ─── Implementation Cost Data ─────────────────────────────────────────────────
 
 const ARIA_COSTS = {
@@ -1088,6 +1321,142 @@ function Layer({ layer, index }) {
   );
 }
 
+// ─── Audience Section ──────────────────────────────────────────────────────────
+
+function AudienceSection() {
+  return (
+    <div style={{ marginBottom: 28 }}>
+      <div className="sec-label" style={{ color: G.muted, marginBottom: 16 }}>Who This Is For</div>
+      <div className="audience-grid">
+        {AUDIENCE.map((a, i) => (
+          <div key={i} className="audience-card">
+            <div className="audience-icon">{a.icon}</div>
+            <div className="audience-title">{a.title}</div>
+            <div className="audience-desc">{a.desc}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── Case Studies Section ──────────────────────────────────────────────────────
+
+function CaseCard({ c }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="case-card">
+      <div className="case-header" onClick={() => setOpen(v => !v)}>
+        <span className="case-tag">{c.tag}</span>
+        <span className="case-title">{c.title}</span>
+        <span style={{ marginLeft: "auto", fontSize: 14, color: G.muted, transition: "transform .2s", transform: open ? "rotate(180deg)" : "none", flexShrink: 0 }}>▾</span>
+      </div>
+      {open && <div className="case-body">{c.body}</div>}
+    </div>
+  );
+}
+
+function CollapsibleSection({ label, children }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="collapsible-section">
+      <div className="collapsible-toggle" onClick={() => setOpen(v => !v)}>
+        <span className="collapsible-label">{label}</span>
+        <span className={`collapsible-arrow ${open ? "open" : ""}`}>▾</span>
+      </div>
+      {open && <div className="collapsible-body">{children}</div>}
+    </div>
+  );
+}
+
+function CaseStudiesSection() {
+  return (
+    <CollapsibleSection label="Why It Matters — Data Sovereignty Cases">
+      <div style={{ marginBottom: 8, fontSize: 13, color: G.muted, lineHeight: 1.6 }}>
+        Real enforcement events that drove organizations to on-prem AI. These are not hypothetical compliance risks. They are decided cases, active regulations, and market exclusions that happened.
+      </div>
+      {CASE_STUDIES.map((c, i) => <CaseCard key={i} c={c} />)}
+    </CollapsibleSection>
+  );
+}
+
+// ─── Decision Trees Section ────────────────────────────────────────────────────
+
+function DecisionTree({ tree }) {
+  const [step, setStep] = useState(tree.start);
+  const node = tree.nodes[step];
+  const isResult = !!node.result;
+
+  return (
+    <div className="decision-tree">
+      <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: G.muted, marginBottom: 12 }}>{tree.label}</div>
+      {isResult ? (
+        <>
+          <div className="decision-result" style={{ background: node.color + "14", border: `1px solid ${node.color}40`, color: node.color }}>
+            Recommendation: {node.result}
+          </div>
+          <div style={{ marginTop: 10, fontSize: 13, color: G.muted, lineHeight: 1.65 }}>{node.detail}</div>
+          <button type="button" className="decision-back" onClick={() => setStep(tree.start)}>Start over</button>
+        </>
+      ) : (
+        <>
+          <div className="decision-q">{node.q}</div>
+          <div className="decision-opts">
+            {node.opts.map((opt, i) => (
+              <button type="button" key={i} className="decision-opt" onClick={() => setStep(opt.next)}>{opt.label}</button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function DecisionGuideSection() {
+  return (
+    <CollapsibleSection label="Decision Guide — Pick Your Tools">
+      <div style={{ marginBottom: 14, fontSize: 13, color: G.muted, lineHeight: 1.6 }}>
+        Answer a few questions about your setup to get a concrete tool recommendation. Each tree resets independently.
+      </div>
+      <DecisionTree tree={TREE_INFERENCE} />
+      <DecisionTree tree={TREE_KUBERNETES} />
+      <DecisionTree tree={TREE_VECTORDB} />
+    </CollapsibleSection>
+  );
+}
+
+// ─── Comparison Tables Section ─────────────────────────────────────────────────
+
+function CompareTableBlock({ table }) {
+  return (
+    <div style={{ marginBottom: 28 }}>
+      <div style={{ fontFamily: "'Inter',sans-serif", fontSize: 15, fontWeight: 700, color: G.text, marginBottom: 12 }}>{table.title}</div>
+      <table className="compare-table">
+        <thead>
+          <tr>{table.headers.map((h, i) => <th key={i}>{h}</th>)}</tr>
+        </thead>
+        <tbody>
+          {table.rows.map((row, ri) => (
+            <tr key={ri}>
+              {row.cols.map((cell, ci) => (
+                <td key={ci} style={ci === 0 ? { fontWeight: 600, color: "#d8eaf8" } : ci === row.cols.length - 1 ? { color: G.muted } : {}}>{cell}</td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function CompareTablesSection() {
+  return (
+    <CollapsibleSection label="Comparison Tables — Models and Databases">
+      {COMPARE_TABLES.map((t, i) => <CompareTableBlock key={i} table={t} />)}
+    </CollapsibleSection>
+  );
+}
+
 export default function ArchitectureDeepDive() {
   const [arch, setArch] = useState("aria");
   const [showDiagram, setShowDiagram] = useState(false);
@@ -1112,10 +1481,12 @@ export default function ArchitectureDeepDive() {
           <p className="motto-kicker">That&rsquo;s the difference.</p>
         </div>
         <div className="hero">
-          <div className="hero-tag">Full Stack Deep Dive</div>
-          <h1>Every Layer. Every Tool.<br />Every Implementation Step.</h1>
-          <p>Click any layer card to expand the full breakdown — what it does, how to build it step by step with code, and exactly why each tool was chosen over its alternatives.</p>
+          <div className="hero-tag">Interactive Deep Dive</div>
+          <h1>Zero Egress Architecture</h1>
+          <p>An interactive deep-dive into on-premises AI infrastructure. Understand every layer, every tool, every trade-off. From data ingestion to model serving, from single-server MVP to multi-tenant production.</p>
         </div>
+        <AudienceSection />
+        <CaseStudiesSection />
         <button type="button" className="arch-diagram-toggle" onClick={() => setShowDiagram(v => !v)}>
           {showDiagram ? "Hide Architecture Diagram" : "View Architecture Diagram"}
         </button>
@@ -1137,6 +1508,8 @@ export default function ArchitectureDeepDive() {
         </div>
         <div className="sec-label" style={{ color: a }}>{layers.length} Layers — Click Each to Expand</div>
         {layers.map((l, i) => <Layer key={i} layer={l} index={i} />)}
+        <DecisionGuideSection />
+        <CompareTablesSection />
         <CostBreakdown
           costs={arch === "aria" ? ARIA_COSTS : LOCALMIND_COSTS}
           accentColor={a}
