@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import ArchDiagram from "./ArchDiagram.jsx";
 
 const G = {
   bg: "#07090f", surface: "#0c1018", card: "#101520", border: "#182030",
@@ -56,6 +57,13 @@ body{background:${G.bg};color:${G.text};font-family:'DM Sans',sans-serif;}
 .tool-why{font-size:13px;color:#2a5040;padding:8px 11px;background:rgba(34,211,160,.05);border-radius:6px;border-left:2px solid rgba(34,211,160,.35);line-height:1.6;}
 .tool-why b{color:#22d3a0;}
 .footer-bar{margin-top:32px;padding:14px 18px;background:${G.surface};border-radius:10px;border:1px solid ${G.border};font-family:'IBM Plex Mono',monospace;font-size:11px;color:${G.muted};text-align:center;letter-spacing:2px;text-transform:uppercase;}
+.arch-diagram-toggle{display:block;margin:0 auto 20px;padding:10px 24px;border-radius:8px;border:1px solid ${G.border};background:${G.surface};color:${G.text};font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;}
+.arch-diagram-toggle:hover{border-color:${G.borderHover};background:${G.card};}
+.arch-diagram-wrap{margin-bottom:28px;border:1px solid ${G.border};border-radius:12px;overflow:hidden;background:${G.surface};padding:16px;}
+.arch-diagram-svg{width:100%;height:auto;}
+.arch-tooltip{margin-top:12px;padding:12px 16px;background:${G.card};border:1px solid ${G.border};border-radius:8px;font-size:12px;line-height:1.6;color:${G.muted};}
+.arch-tooltip strong{color:${G.text};font-family:'Syne',sans-serif;font-size:14px;display:block;margin-bottom:4px;}
+@keyframes dash-flow{from{stroke-dashoffset:20}to{stroke-dashoffset:0}}
 `;
 
 const ARCH1 = [
@@ -833,6 +841,7 @@ function Layer({ layer, index }) {
 
 export default function ArchitectureDeepDive() {
   const [arch, setArch] = useState("aria");
+  const [showDiagram, setShowDiagram] = useState(false);
   const layers = arch === "aria" ? ARCH1 : ARCH2;
 
   useEffect(() => {
@@ -853,11 +862,15 @@ export default function ArchitectureDeepDive() {
           <h1>Every Layer. Every Tool.<br />Every Implementation Step.</h1>
           <p>Click any layer card to expand the full breakdown — what it does, how to build it step by step with code, and exactly why each tool was chosen over its alternatives.</p>
         </div>
+        <button type="button" className="arch-diagram-toggle" onClick={() => setShowDiagram(v => !v)}>
+          {showDiagram ? "Hide Architecture Diagram" : "View Architecture Diagram"}
+        </button>
+        {showDiagram && <ArchDiagram variant={arch === "aria" ? "aria" : "localmind"} />}
         <div className="arch-tabs">
-          <button className={`arch-tab ${arch === "aria" ? "t-cyan" : ""}`} onClick={() => setArch("aria")}>
+          <button type="button" className={`arch-tab ${arch === "aria" ? "t-cyan" : ""}`} onClick={() => setArch("aria")}>
             🏢 Arch 1 — ARIA Internal Chatbot
           </button>
-          <button className={`arch-tab ${arch === "localmind" ? "t-purple" : ""}`} onClick={() => setArch("localmind")}>
+          <button type="button" className={`arch-tab ${arch === "localmind" ? "t-purple" : ""}`} onClick={() => setArch("localmind")}>
             🚀 Arch 2 — LocalMind SaaS Platform
           </button>
         </div>
