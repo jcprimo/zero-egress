@@ -62,16 +62,23 @@ const ARCH1 = [
   {
     name:"Data Ingestion & Connector Layer",subtitle:"Pulls everything your company knows into one unified pipeline",
     accent:G.cyan,abg:"rgba(0,212,255,.15)",
-    what:`This is the data-hungry mouth of your system — it continuously pulls raw content from every source your company produces knowledge in. Think of it as a set of always-on pipes that connect Slack, Confluence, GitHub, your CRM, PDF uploads, and your app's own config into a single normalized stream. Without this layer, your chatbot is deaf to everything happening in your organization. The job here is NOT to understand the data — it's to collect it reliably, tag it with metadata (source, author, date, type), and pass it downstream without loss or duplication. Every connector either listens for real-time events via webhooks or polls on a schedule. All output flows into a central event bus before anything downstream touches it.`,
+    what:`This is the data-hungry mouth of your system — it continuously pulls raw content from every source your company produces knowledge in. Think of it as a set of always-on pipes that connect Slack, Confluence, GitHub, your CRM, PDF uploads, and your app's own config into a single normalized stream. Without this layer, your chatbot is deaf to everything happening in your organization. The job here is NOT to understand the data — it's to collect it reliably, tag it with metadata (source, author, date, type), and pass it downstream without loss or duplication. Every connector either listens for real-time events via webhooks or polls on a schedule. All output flows into a central event bus before anything downstream touches it. Raw documents are also stored in MinIO for reindexing if the embedding model or chunking strategy changes.`,
     steps:[
       {title:"Deploy Apache Kafka as the central event bus",desc:"Every data source publishes events to a Kafka topic. This decouples your connectors from your processing pipeline — if the embedding engine is down, messages queue up and nothing is lost. Kafka guarantees message ordering and durability across restarts.",
-       code:`<span style="color:#2a4a60"># docker-compose.yml — Kafka broker</span>
+       code:`<span style="color:#2a4a60"># docker-compose.yml — Kafka KRaft mode (no ZooKeeper)</span>
 <span style="color:#00d4ff">services</span>:
   <span style="color:#00d4ff">kafka</span>:
-    <span style="color:#00d4ff">image</span>: <span style="color:#f59e0b">confluentinc/cp-kafka:7.5.0</span>
+    <span style="color:#00d4ff">image</span>: <span style="color:#f59e0b">confluentinc/cp-kafka:7.8.0</span>
     <span style="color:#00d4ff">environment</span>:
-      KAFKA_LISTENERS: <span style="color:#f59e0b">PLAINTEXT://0.0.0.0:9092</span>
+      KAFKA_NODE_ID: <span style="color:#22d3a0">1</span>
+      KAFKA_PROCESS_ROLES: <span style="color:#f59e0b">broker,controller</span>
+      KAFKA_CONTROLLER_QUORUM_VOTERS: <span style="color:#f59e0b">1@kafka:29093</span>
+      KAFKA_LISTENERS: <span style="color:#f59e0b">PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:29093</span>
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: <span style="color:#f59e0b">PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT</span>
+      KAFKA_INTER_BROKER_LISTENER_NAME: <span style="color:#f59e0b">PLAINTEXT</span>
+      KAFKA_CONTROLLER_LISTENER_NAMES: <span style="color:#f59e0b">CONTROLLER</span>
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: <span style="color:#22d3a0">true</span>
+      CLUSTER_ID: <span style="color:#f59e0b">MkU3OEVBNTcwNTJENDM2Qk</span>
     <span style="color:#00d4ff">ports</span>: [<span style="color:#f59e0b">"9092:9092"</span>]`},
       {title:"Build a connector for each data source",desc:"Each connector is a small service that authenticates with the source API, listens for changes via webhook or polling, and publishes a normalized JSON payload to a Kafka topic called 'raw-documents'.",
        code:`<span style="color:#2a4a60"># Slack connector — real-time event stream</span>
@@ -167,14 +174,19 @@ curl http://localhost:11434/api/embeddings \
       {title:"Build async batch embedding for throughput",desc:"Never embed one chunk at a time. Batch process for speed — a single RTX 4090 can embed thousands of chunks per minute with async parallelism. Pin the model in config as the single source of truth.",
        code:`<span style="color:#00d4ff">import</span> httpx, asyncio
 
+EMBED_SEM = asyncio.Semaphore(<span style="color:#22d3a0">8</span>)  <span style="color:#2a4a60"># limit concurrent Ollama requests</span>
+
+<span style="color:#00d4ff">async def</span> embed_one(client: httpx.AsyncClient, text: str) -> list[float]:
+    <span style="color:#00d4ff">async with</span> EMBED_SEM:
+        r = <span style="color:#00d4ff">await</span> client.post(
+            <span style="color:#f59e0b">"http://localhost:11434/api/embeddings"</span>,
+            json={<span style="color:#f59e0b">"model"</span>: <span style="color:#f59e0b">"nomic-embed-text"</span>, <span style="color:#f59e0b">"prompt"</span>: text}
+        )
+        <span style="color:#00d4ff">return</span> r.json()[<span style="color:#f59e0b">"embedding"</span>]
+
 <span style="color:#00d4ff">async def</span> embed_batch(texts: list[str]) -> list[list[float]]:
     <span style="color:#00d4ff">async with</span> httpx.AsyncClient(timeout=<span style="color:#22d3a0">30</span>) <span style="color:#00d4ff">as</span> client:
-        tasks = [client.post(
-            <span style="color:#f59e0b">"http://localhost:11434/api/embeddings"</span>,
-            json={<span style="color:#f59e0b">"model"</span>: <span style="color:#f59e0b">"nomic-embed-text"</span>, <span style="color:#f59e0b">"prompt"</span>: t}
-        ) <span style="color:#00d4ff">for</span> t <span style="color:#00d4ff">in</span> texts]
-        responses = <span style="color:#00d4ff">await</span> asyncio.gather(*tasks)
-        <span style="color:#00d4ff">return</span> [r.json()[<span style="color:#f59e0b">"embedding"</span>] <span style="color:#00d4ff">for</span> r <span style="color:#00d4ff">in</span> responses]`},
+        <span style="color:#00d4ff">return await</span> asyncio.gather(*[embed_one(client, t) <span style="color:#00d4ff">for</span> t <span style="color:#00d4ff">in</span> texts])`},
     ],
     tools:[
       {name:"nomic-embed-text",role:"EMBEDDING MODEL",what:"A 137M parameter open-source embedding model optimized for local deployment. Produces 768-dimensional vectors with an 8192-token context window. Runs on CPU or GPU. Available via Ollama with a single pull command. Apache 2.0 licensed.",why:"Best quality-to-speed ratio for on-prem use. Can process thousands of chunks per minute on a mid-range GPU with zero cloud cost or API rate limits."},
@@ -208,11 +220,11 @@ client.create_payload_index(<span style="color:#f59e0b">"company_knowledge"</spa
 client.create_payload_index(<span style="color:#f59e0b">"company_knowledge"</span>,
     field_name=<span style="color:#f59e0b">"created_at"</span>, field_schema=<span style="color:#f59e0b">"datetime"</span>)`},
       {title:"Implement hybrid semantic + metadata search",desc:"Combine vector similarity with metadata filters to enable precise retrieval. Pure semantic search misses exact matches — product names, ticket IDs, version numbers.",
-       code:`<span style="color:#00d4ff">from</span> qdrant_client.models <span style="color:#00d4ff">import</span> Filter, FieldCondition
+       code:`<span style="color:#00d4ff">from</span> qdrant_client.models <span style="color:#00d4ff">import</span> Filter, FieldCondition, MatchValue
 
 <span style="color:#00d4ff">def</span> search(query_vec, filters={}, top_k=<span style="color:#22d3a0">5</span>):
     qfilter = Filter(must=[
-        FieldCondition(key=k, match={<span style="color:#f59e0b">"value"</span>: v})
+        FieldCondition(key=k, match=MatchValue(value=v))
         <span style="color:#00d4ff">for</span> k, v <span style="color:#00d4ff">in</span> filters.items()
     ]) <span style="color:#00d4ff">if</span> filters <span style="color:#00d4ff">else None</span>
     <span style="color:#00d4ff">return</span> client.search(<span style="color:#f59e0b">"company_knowledge"</span>,
@@ -228,7 +240,7 @@ client.create_payload_index(<span style="color:#f59e0b">"company_knowledge"</spa
   {
     name:"LLM Inference Engine (Local)",subtitle:"The brain — runs your language model 100% on-prem, zero data egress",
     accent:G.cyan,abg:"rgba(0,212,255,.15)",
-    what:`This is the core of the architecture — the actual language model that reads retrieved context and generates answers. The key architectural decision is that it runs entirely on your hardware. No API keys, no per-token billing, no data leaving your network. The inference engine exposes a local HTTP server on localhost that speaks either the OpenAI or Anthropic Messages API format — so the orchestration layer doesn't need to know or care that it's talking to a local model. You choose the model based on your GPU VRAM budget: a 7B model (Q4 quantized) fits on 8GB VRAM, a 34B model needs ~24GB, a 70B model needs ~40GB. For an internal company chatbot, a well-tuned 13B–34B parameter model is the sweet spot between answer quality and response speed.`,
+    what:`This is the core of the architecture — the actual language model that reads retrieved context and generates answers. The key architectural decision is that it runs entirely on your hardware. No API keys, no per-token billing, no data leaving your network. The inference engine exposes a local HTTP server on localhost that speaks either the OpenAI or Anthropic Messages API format — so the orchestration layer doesn't need to know or care that it's talking to a local model. You choose the model based on your GPU VRAM budget: a 7B model (Q4 quantized) fits on 8GB VRAM, a 34B model needs ~24GB, a 70B model needs ~40GB. For an internal company chatbot, a well-tuned 13B–34B parameter model is the sweet spot between answer quality and response speed. Zero Egress Boundary guarantee: every token generated in this layer is produced on hardware inside the customer's premises. No prompt, no retrieved context, and no generated response crosses the network boundary to any external party.`,
     steps:[
       {title:"Install Ollama and pull your model",desc:"Ollama is the fastest path to a working local inference server. One install script, one pull command, one local API endpoint.",
        code:`<span style="color:#2a4a60"># Install Ollama on Linux</span>
@@ -305,7 +317,7 @@ app = FastAPI()
     <span style="color:#00d4ff">await</span> ws.accept()
     <span style="color:#00d4ff">while True</span>:
         query = <span style="color:#00d4ff">await</span> ws.receive_text()
-        response = chat_engine.stream_chat(query)
+        response = <span style="color:#00d4ff">await</span> chat_engine.astream_chat(query)
         <span style="color:#00d4ff">async for</span> token <span style="color:#00d4ff">in</span> response.async_response_gen():
             <span style="color:#00d4ff">await</span> ws.send_text(token)`},
     ],
@@ -389,9 +401,9 @@ model.save_pretrained_merged(<span style="color:#f59e0b">"./models/aria-v2"</spa
     <span style="color:#00d4ff">proxy_pass</span> http://open-webui:8080;
 }`},
       {title:"Build a Slack bot for in-workflow answers",desc:"A Slack bot calling your RAG API lets employees ask questions without leaving Slack. Uses Slack's Bolt SDK — deploy as a separate service.",
-       code:`<span style="color:#00d4ff">from</span> slack_bolt <span style="color:#00d4ff">import</span> App
+       code:`<span style="color:#00d4ff">from</span> slack_bolt.async_app <span style="color:#00d4ff">import</span> AsyncApp
 <span style="color:#00d4ff">import</span> httpx
-app = App(token=SLACK_TOKEN, signing_secret=SLACK_SECRET)
+app = AsyncApp(token=SLACK_TOKEN, signing_secret=SLACK_SECRET)
 
 <span style="color:#00d4ff">@app.event</span>(<span style="color:#f59e0b">"app_mention"</span>)
 <span style="color:#00d4ff">async def</span> on_mention(event, say):
@@ -413,7 +425,7 @@ const ARCH2 = [
   {
     name:"Tenant Control Plane",subtitle:"The admin backbone — manages every customer's lifecycle, billing, and provisioning",
     accent:G.purple,abg:"rgba(168,85,247,.15)",
-    what:`The control plane is the operating system of your SaaS business. It's the system that knows everything about every customer — who they are, what plan they're on, which models they can access, how much compute they've consumed this billing period, and whether their subscription is active. When a new customer signs up, the control plane provisions their isolated environment automatically: creates their vector namespace in Qdrant, issues API keys with the right permissions, configures their model assignment based on plan tier, and if they're enterprise, triggers Terraform to spin up their dedicated inference container. Every downstream service consults the control plane on every request to make authorization decisions. It must be the most reliable component in your stack — if the control plane is down, no tenant can make requests.`,
+    what:`The control plane is the operating system of your SaaS business. It's the system that knows everything about every customer — who they are, what plan they're on, which models they can access, how much compute they've consumed this billing period, and whether their subscription is active. When a new customer signs up, the control plane provisions their isolated environment automatically: creates their vector namespace in Qdrant, issues API keys with the right permissions, configures their model assignment based on plan tier, and if they're enterprise, triggers Terraform to spin up their dedicated inference container. For on-prem deployments, the control plane coordinates installation, engineer onboarding, and the same lifecycle automation runs inside the customer's own network. Every downstream service consults the control plane on every request to make authorization decisions. It must be the most reliable component in your stack — if the control plane is down, no tenant can make requests.`,
     steps:[
       {title:"Design the multi-tenant data model in PostgreSQL",desc:"Every tenant, their plan, limits, model config, and API keys live in a central registry. This drives all downstream authorization and provisioning.",
        code:`<span style="color:#2a4a60">-- Core tenant registry</span>
@@ -433,12 +445,16 @@ const ARCH2 = [
   expires_at TIMESTAMPTZ
 );`},
       {title:"Automate tenant provisioning with Terraform",desc:"New enterprise tenants trigger a Terraform apply that creates their dedicated container, network namespace, and Qdrant collection automatically.",
-       code:`<span style="color:#2a4a60"># Terraform module: enterprise tenant provisioning</span>
-<span style="color:#a855f7">resource</span> <span style="color:#f59e0b">"docker_container"</span> <span style="color:#f59e0b">"tenant_llm"</span> {
-  <span style="color:#a855f7">name</span>  = <span style="color:#f59e0b">"llm-\${var.tenant_slug}"</span>
-  <span style="color:#a855f7">image</span> = <span style="color:#f59e0b">"llama-server:latest"</span>
-  <span style="color:#a855f7">env</span>   = [<span style="color:#f59e0b">"MODEL=\${var.model}"</span>, <span style="color:#f59e0b">"PORT=8080"</span>]
-  <span style="color:#a855f7">networks_advanced</span> { name = <span style="color:#f59e0b">"net-\${var.tenant_slug}"</span> }
+       code:`<span style="color:#2a4a60"># Terraform module: enterprise tenant provisioning via Helm</span>
+<span style="color:#a855f7">resource</span> <span style="color:#f59e0b">"helm_release"</span> <span style="color:#f59e0b">"tenant_llm"</span> {
+  <span style="color:#a855f7">name</span>       = <span style="color:#f59e0b">"llm-\${var.tenant_slug}"</span>
+  <span style="color:#a855f7">namespace</span>  = <span style="color:#f59e0b">"tenant-\${var.tenant_slug}"</span>
+  <span style="color:#a855f7">chart</span>      = <span style="color:#f59e0b">"./charts/llm-inference"</span>
+  <span style="color:#a855f7">create_namespace</span> = <span style="color:#22d3a0">true</span>
+
+  <span style="color:#a855f7">set</span> { <span style="color:#a855f7">name</span> = <span style="color:#f59e0b">"model"</span>;  <span style="color:#a855f7">value</span> = <span style="color:#f59e0b">var.model</span> }
+  <span style="color:#a855f7">set</span> { <span style="color:#a855f7">name</span> = <span style="color:#f59e0b">"tenant"</span>; <span style="color:#a855f7">value</span> = <span style="color:#f59e0b">var.tenant_slug</span> }
+  <span style="color:#a855f7">set</span> { <span style="color:#a855f7">name</span> = <span style="color:#f59e0b">"gpu.limit"</span>; <span style="color:#a855f7">value</span> = <span style="color:#f59e0b">"1"</span> }
 }`},
       {title:"Wire Stripe webhooks for lifecycle automation",desc:"Stripe events automatically activate, suspend, or upgrade tenants. No manual intervention needed for subscription lifecycle events.",
        code:`<span style="color:#a855f7">@app.post</span>(<span style="color:#f59e0b">"/webhooks/stripe"</span>)
@@ -446,12 +462,18 @@ const ARCH2 = [
     event = stripe.Webhook.construct_event(
         <span style="color:#a855f7">await</span> request.body(),
         request.headers[<span style="color:#f59e0b">"stripe-signature"</span>], SECRET)
+    <span style="color:#2a4a60"># Idempotency: skip if already processed</span>
+    <span style="color:#a855f7">if await</span> db.fetchval(
+        <span style="color:#f59e0b">"SELECT 1 FROM events_processed WHERE event_id=$1"</span>, event.id):
+        <span style="color:#a855f7">return</span> {<span style="color:#f59e0b">"status"</span>: <span style="color:#f59e0b">"duplicate"</span>}
     handlers = {
         <span style="color:#f59e0b">"customer.subscription.deleted"</span>: suspend_tenant,
         <span style="color:#f59e0b">"invoice.payment_succeeded"</span>:      activate_tenant,
         <span style="color:#f59e0b">"customer.subscription.updated"</span>:   upgrade_tenant,
     }
-    <span style="color:#a855f7">await</span> handlers[event.type](event.data.object)`},
+    <span style="color:#a855f7">await</span> handlers[event.type](event.data.object)
+    <span style="color:#a855f7">await</span> db.execute(
+        <span style="color:#f59e0b">"INSERT INTO events_processed(event_id) VALUES($1)"</span>, event.id)`},
     ],
     tools:[
       {name:"PostgreSQL",role:"TENANT REGISTRY",what:"Stores the authoritative record of every tenant — plan, limits, model config, API keys, and billing status. Uses ACID transactions to guarantee consistency when provisioning new tenants or processing billing events. Tenant config is cached in Redis for performance, but PostgreSQL is always the source of truth.",why:"Billing and access control decisions require strong consistency — you never want eventual consistency when deciding whether to authorize a request or charge a customer. PostgreSQL's ACID guarantees are the right foundation for this."},
@@ -504,26 +526,33 @@ const ARCH2 = [
   {
     name:"Multi-Tenant Inference Engine",subtitle:"Serves LLM requests to multiple customers simultaneously with strict isolation",
     accent:G.green,abg:"rgba(34,211,160,.15)",
-    what:`This is the most technically challenging layer of the SaaS platform. You need to run LLM inference for multiple tenants simultaneously while guaranteeing that their requests, context, outputs, and GPU memory are completely isolated. The architecture is tiered: starter-tier tenants share a vLLM instance with per-request LoRA adapter swapping, pro-tier gets isolated containers in a shared GPU pool, and enterprise gets dedicated bare-metal with their own llama-server process. vLLM's PagedAttention dramatically increases GPU utilization for the shared tier — it manages GPU memory like a virtual memory system, eliminating memory fragmentation. Multi-LoRA support lets vLLM serve 16+ tenant-specific model personalities from one base model simultaneously.`,
+    what:`This is the most technically challenging layer of the SaaS platform. You need to run LLM inference for multiple tenants simultaneously while guaranteeing that their requests, context, outputs, and GPU memory are completely isolated. The architecture is tiered: starter-tier tenants share a vLLM instance with per-request LoRA adapter swapping, pro-tier gets isolated containers in a shared GPU pool, and enterprise gets dedicated bare-metal with their own llama-server process. vLLM's PagedAttention dramatically increases GPU utilization for the shared tier — it manages GPU memory like a virtual memory system, eliminating memory fragmentation. Multi-LoRA support lets vLLM serve multiple tenant-specific model personalities from one base model simultaneously. Zero Egress Boundary guarantee: for on-prem deployments, this entire inference layer runs inside the customer's network. No prompt, no LoRA-augmented output, and no retrieved context leaves the premises. For hosted SaaS, all inference runs within LocalMind's own infrastructure — no third-party AI API is ever called.`,
     steps:[
       {title:"Deploy vLLM for the shared inference tier",desc:"vLLM's continuous batching and PagedAttention serve multiple tenants on one GPU pool efficiently. Enable multi-LoRA for per-tenant model personalization.",
        code:`<span style="color:#2a4a60"># vLLM shared tier — Anthropic API compatible</span>
+<span style="color:#2a4a60"># Multi-GPU (tensor-parallel) needed for --max-model-len >32k or --max-loras >4</span>
 vllm serve Qwen/Qwen3-Coder-Next-FP8 \
   --served-model-name qwen3-coder-next \
   --port 8000 \
-  --max-model-len 131072 \
+  --max-model-len 32768 \
   --gpu-memory-utilization 0.90 \
   --enable-auto-tool-choice \
   --tool-call-parser qwen3_coder \
-  --enable-lora --max-loras 16 \
+  --enable-lora --max-loras 4 \
   --enable-prefix-caching`},
       {title:"Build an inference router that picks the backend per tenant",desc:"A lightweight service reads tenant plan from Redis cache and routes to shared pool, isolated container, or dedicated node accordingly.",
-       code:`<span style="color:#a855f7">async def</span> route(request, tenant):
+       code:`<span style="color:#2a4a60"># Only approved adapters may be loaded onto shared vLLM</span>
+LORA_ALLOWLIST = {<span style="color:#f59e0b">"base"</span>, <span style="color:#f59e0b">"code-v1"</span>, <span style="color:#f59e0b">"support-v2"</span>, <span style="color:#f59e0b">"legal-v1"</span>}
+
+<span style="color:#a855f7">async def</span> route(request, tenant):
     <span style="color:#a855f7">if</span> tenant.plan == <span style="color:#f59e0b">"enterprise"</span>:
         backend = f<span style="color:#f59e0b">"http://llm-{tenant.slug}:8080"</span>
     <span style="color:#a855f7">elif</span> tenant.plan == <span style="color:#f59e0b">"pro"</span>:
         backend = f<span style="color:#f59e0b">"http://vllm-pro-{tenant.gpu_slot}:8000"</span>
     <span style="color:#a855f7">else</span>:
+        <span style="color:#a855f7">if</span> tenant.lora_adapter <span style="color:#a855f7">not in</span> LORA_ALLOWLIST:
+            <span style="color:#a855f7">raise</span> HTTPException(status_code=<span style="color:#22d3a0">403</span>,
+                detail=<span style="color:#f59e0b">"LoRA adapter not permitted"</span>)
         backend = <span style="color:#f59e0b">"http://vllm-shared:8000"</span>
         request.model += f<span style="color:#f59e0b">"+{tenant.lora_adapter}"</span>
     <span style="color:#a855f7">return await</span> proxy_stream(backend, request)`},
@@ -567,9 +596,12 @@ tools_available = [
        code:`<span style="color:#00d4ff">import</span> docker
 client = docker.from_env()
 
+<span style="color:#2a4a60"># runtime="runsc" uses gVisor for kernel-level isolation</span>
+<span style="color:#2a4a60"># In Kubernetes: configure a RuntimeClass with handler: runsc</span>
 <span style="color:#00d4ff">def</span> create_sandbox(tenant_id: str, workspace: str):
     <span style="color:#00d4ff">return</span> client.containers.run(
         <span style="color:#f59e0b">"agent-sandbox:latest"</span>, detach=<span style="color:#22d3a0">True</span>,
+        runtime=<span style="color:#f59e0b">"runsc"</span>,              <span style="color:#2a4a60"># gVisor sandbox</span>
         network=f<span style="color:#f59e0b">"net-{tenant_id}"</span>,     <span style="color:#2a4a60"># isolated network</span>
         volumes={workspace: {<span style="color:#f59e0b">"bind"</span>:<span style="color:#f59e0b">"/workspace"</span>,<span style="color:#f59e0b">"mode"</span>:<span style="color:#f59e0b">"rw"</span>}},
         mem_limit=<span style="color:#f59e0b">"2g"</span>,
@@ -666,22 +698,24 @@ clean = redact(raw_text)`},
     what:`This is the last mile of the product — how your platform actually gets into developers' daily workflows. The article's author wrote a custom shell script called 'lcc' to make Claude Code connect seamlessly to their local inference server. You're productizing that experience. Your CLI abstracts away all infrastructure complexity: tenants don't need to know about vLLM, Qdrant, or Kubernetes — they run 'localmind run fix this bug' and get a full agentic assistant connected to their codebase, running on your infrastructure, with their own isolated knowledge base. The CLI experience quality is a direct retention lever — a tool developers reach for habitually because it's fast and frictionless has fundamentally different churn dynamics than one they use reluctantly. This layer is also where you build the VS Code extension that puts your product inside the world's most popular development environment.`,
     steps:[
       {title:"Build the CLI as a pip-installable Python package",desc:"A single install command, a single auth command, and tenants have a fully working agentic assistant. The CLI wraps Claude Code, pointing it at your tenant-specific backend URL with their API key injected.",
-       code:`<span style="color:#2a4a60"># localmind/cli.py</span>
-<span style="color:#00d4ff">import</span> typer, subprocess, os, httpx
+       code:`<span style="color:#2a4a60"># localmind/cli.py — custom agent harness (no claude binary dependency)</span>
+<span style="color:#2a4a60"># Note: redistributing Claude Code requires Anthropic licensing approval</span>
+<span style="color:#00d4ff">import</span> typer, asyncio, os, httpx, json
 app = typer.Typer()
 
 <span style="color:#a855f7">@app.command</span>()
 <span style="color:#a855f7">def</span> run(task: str = typer.Argument(<span style="color:#22d3a0">None</span>)):
+    asyncio.run(_run(task))
+
+<span style="color:#a855f7">async def</span> _run(task: str):
     key = os.environ[<span style="color:#f59e0b">"LOCALMIND_API_KEY"</span>]
-    <span style="color:#2a4a60"># Fetch tenant's assigned model from control plane</span>
-    model = httpx.get(<span style="color:#f59e0b">"https://api.localmind.ai/v1/me"</span>,
-        headers={<span style="color:#f59e0b">"X-API-Key"</span>: key}).json()[<span style="color:#f59e0b">"default_model"</span>]
-    env = {**os.environ,
-        <span style="color:#f59e0b">"ANTHROPIC_BASE_URL"</span>: <span style="color:#f59e0b">"https://api.localmind.ai/v1"</span>,
-        <span style="color:#f59e0b">"ANTHROPIC_API_KEY"</span>:  key}
-    subprocess.run(
-        [<span style="color:#f59e0b">"claude"</span>, <span style="color:#f59e0b">"--model"</span>, model] + ([task] <span style="color:#00d4ff">if</span> task <span style="color:#00d4ff">else</span> []),
-        env=env)`},
+    <span style="color:#a855f7">async with</span> httpx.AsyncClient(base_url=<span style="color:#f59e0b">"https://api.localmind.ai"</span>,
+            headers={<span style="color:#f59e0b">"X-API-Key"</span>: key}, timeout=<span style="color:#22d3a0">120</span>) <span style="color:#a855f7">as</span> client:
+        resp = <span style="color:#a855f7">await</span> client.post(<span style="color:#f59e0b">"/v1/agent/run"</span>,
+            json={<span style="color:#f59e0b">"task"</span>: task, <span style="color:#f59e0b">"stream"</span>: <span style="color:#22d3a0">True</span>})
+        <span style="color:#a855f7">async for</span> line <span style="color:#a855f7">in</span> resp.aiter_lines():
+            <span style="color:#a855f7">if</span> line.startswith(<span style="color:#f59e0b">"data: "</span>):
+                print(json.loads(line[<span style="color:#22d3a0">6</span>:])[<span style="color:#f59e0b">"text"</span>], end=<span style="color:#f59e0b">""</span>, flush=<span style="color:#22d3a0">True</span>)`},
       {title:"Auto-generate typed SDKs from your OpenAPI spec",desc:"Generate idiomatic API clients for Python, TypeScript, and Go from your OpenAPI spec. Tenants can embed your agentic AI in their own applications programmatically.",
        code:`<span style="color:#2a4a60"># Generate Python SDK</span>
 openapi-generator-cli generate \
@@ -829,9 +863,9 @@ export default function App() {
         </div>
         <div className={`arch-intro ${arch === "aria" ? "ai-cyan" : "ai-purple"}`}>
           {arch === "aria" ? (
-            <><span className="ai-strong-cyan">ARIA — Adaptive Retrieval Intelligence Architecture</span>Self-contained internal chatbot ingesting Slack, Confluence, GitHub, CRM, PDFs, and app scope. Runs all inference locally with zero cloud dependency. Continuously improves through LoRA fine-tuning driven by real user feedback. 8 layers. Hybrid deployment.</>
+            <><span className="ai-strong-cyan">ARIA — Adaptive Retrieval Intelligence Architecture</span>On-prem AI chatbot deployed inside the customer's network. Zero-Egress installs the system, trains internal engineers to maintain it, and provides ongoing support. All inference runs locally. True zero data egress.</>
           ) : (
-            <><span className="ai-strong-purple">LocalMind — Privacy-First Agentic AI SaaS Platform</span>Multi-tenant platform selling agentic AI as a service. Dev teams, security firms, and regulated enterprises get Claude Code-style capabilities powered by local inference with complete tenant isolation, metered billing, and a polished CLI/SDK. 8 layers. Production-grade.</>
+            <><span className="ai-strong-purple">LocalMind — Privacy-First Agentic AI SaaS Platform</span>Multi-tenant agentic AI platform. Dual delivery: hosted SaaS or on-prem installation. Hosted: no third-party AI dependency, all data stays within LocalMind infrastructure. On-prem: true zero data egress. Install, train, support model.</>
           )}
         </div>
         <div className="sec-label" style={{ color: a }}>{layers.length} Layers — Click Each to Expand</div>
