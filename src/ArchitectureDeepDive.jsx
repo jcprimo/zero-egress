@@ -64,6 +64,29 @@ body{background:${G.bg};color:${G.text};font-family:'DM Sans',sans-serif;}
 .arch-tooltip{margin-top:12px;padding:12px 16px;background:${G.card};border:1px solid ${G.border};border-radius:8px;font-size:12px;line-height:1.6;color:${G.muted};}
 .arch-tooltip strong{color:${G.text};font-family:'Syne',sans-serif;font-size:14px;display:block;margin-bottom:4px;}
 @keyframes dash-flow{from{stroke-dashoffset:20}to{stroke-dashoffset:0}}
+.cost-section{margin-top:28px;}
+.cost-toggle{display:flex;align-items:center;gap:10px;cursor:pointer;padding:14px 0;user-select:none;}
+.cost-toggle-label{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:${G.muted};}
+.cost-toggle-label::after{content:'';flex:1;height:1px;background:${G.border};}
+.cost-arrow{font-size:14px;color:${G.muted};transition:transform .2s;}
+.cost-arrow.open{transform:rotate(180deg);}
+.cost-body{padding:0 0 20px;}
+.cost-tier{margin-bottom:24px;}
+.cost-tier-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:${G.text};margin-bottom:14px;}
+.cost-table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:13px;}
+.cost-table th{text-align:left;padding:8px 12px;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:${G.muted};border-bottom:1px solid ${G.border};}
+.cost-table td{padding:8px 12px;border-bottom:1px solid ${G.faint};color:${G.text};}
+.cost-table td:first-child{font-weight:600;color:#d8eaf8;}
+.cost-ref{font-size:11px;color:${G.muted};font-style:italic;margin-top:4px;margin-bottom:16px;line-height:1.5;}
+.cost-software{padding:10px 14px;background:${G.faint};border-radius:8px;font-size:13px;color:${G.green};margin-bottom:12px;}
+.cost-human{background:${G.faint};border-radius:8px;padding:14px 16px;margin-bottom:12px;}
+.cost-human-row{display:flex;justify-content:space-between;margin-bottom:6px;font-size:13px;}
+.cost-human-label{color:${G.muted};}
+.cost-human-value{color:${G.text};font-weight:600;}
+.cost-total{border-radius:10px;padding:16px 20px;margin-top:16px;font-family:'Syne',sans-serif;}
+.cost-total-label{font-size:11px;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;}
+.cost-total-value{font-size:18px;font-weight:800;color:#e8f2ff;}
+.cost-total-detail{font-size:12px;color:${G.muted};margin-top:4px;}
 `;
 
 const ARCH1 = [
@@ -307,7 +330,7 @@ vector_store = QdrantVectorStore(client=qclient, collection_name=<span style="co
 index = VectorStoreIndex.from_vector_store(vector_store)
 chat_engine = index.as_chat_engine(
     chat_mode=<span style="color:#f59e0b">"condense_plus_context"</span>,
-    system_prompt=<span style="color:#f59e0b">"""You are ARIA. Answer using company knowledge only.
+    system_prompt=<span style="color:#f59e0b">"""You are A.R.I.A. Answer using company knowledge only.
     Always cite the source document. Say 'I don't know' if unsure."""</span>
 )`},
       {title:"Add conversation memory across turns",desc:"Without memory, every message is treated as a new query — 'what about the second option you mentioned?' fails completely. Add a token-limited chat buffer.",
@@ -760,6 +783,229 @@ result = client.agents.run(
   },
 ];
 
+// ─── Implementation Cost Data ─────────────────────────────────────────────────
+
+const ARIA_COSTS = {
+  mvp: {
+    title: "MVP (50-100 person company)",
+    compute: [
+      { item: "GPU Server (LLM inference)", spec: "1x NVIDIA RTX 4090 (24GB VRAM)", cloud: "$317/mo", bare: "$250/mo", ref: "RunPod on-demand pricing (runpod.io/pricing), Hetzner AX162 lease" },
+      { item: "CPU Server (all services)", spec: "8 vCPU, 32GB RAM", cloud: "$55/mo", bare: "$55/mo", ref: "Hetzner AX42 dedicated server pricing (hetzner.com/dedicated-rootserver)" },
+    ],
+    storage: [
+      { item: "Qdrant + PostgreSQL + MinIO", spec: "1TB NVMe SSD", cost: "Included in server", ref: "Hetzner includes 2x 512GB NVMe with AX42" },
+    ],
+    software: "$0/mo (all open-source: Apache 2.0, MIT, BSD)",
+    human: {
+      setup: "$12,000-$18,000 (80-120 engineer-hours at $150/hr)",
+      monthly: "$1,200-$1,800/mo (8-12 hours/month maintenance)",
+      ref: "Glassdoor Senior DevOps/ML Engineer median rate, US market 2025-2026",
+    },
+    total: {
+      cloud: "~$1,875/mo + $15,000 setup",
+      bare: "~$1,807/mo + $15,000 setup + $3,500 GPU purchase",
+    },
+  },
+  production: {
+    title: "Production (500-5,000 person enterprise)",
+    compute: [
+      { item: "GPU Servers (inference HA pair)", spec: "2x NVIDIA A100 80GB", cloud: "$1,858/mo", bare: "$3,000/mo lease", ref: "Lambda Labs A100 80GB on-demand ($1.29/hr x 720hrs), OVH dedicated GPU" },
+      { item: "GPU Server (embedding + fine-tuning)", spec: "1x NVIDIA L40S (48GB)", cloud: "$533/mo", bare: "$417/mo amortized", ref: "RunPod L40S on-demand ($0.74/hr), purchase ~$8K amortized over 24mo" },
+      { item: "CPU Cluster (services)", spec: "3x nodes, 16 vCPU / 64GB RAM", cloud: "$225/mo", bare: "$225/mo", ref: "Hetzner AX52 x3 ($75/ea)" },
+    ],
+    storage: [
+      { item: "Qdrant + PostgreSQL HA + MinIO + Backups", spec: "~4TB total", cost: "$175/mo", ref: "Hetzner Storage Box pricing + NVMe included in nodes" },
+    ],
+    software: "$0/mo (all open-source)",
+    human: {
+      setup: "$30,000-$45,000 (200-300 engineer-hours)",
+      monthly: "$3,000-$6,000/mo (20-40 hours/month)",
+      ref: "Based on $150/hr senior ML/DevOps rate",
+    },
+    total: {
+      cloud: "~$7,500-$9,000/mo + $40,000 setup",
+      bare: "~$6,200-$8,700/mo + $40,000 setup + $55,000-$70,000 hardware",
+    },
+  },
+};
+
+const LOCALMIND_COSTS = {
+  mvp: {
+    title: "MVP (5-10 tenants, shared infrastructure)",
+    compute: [
+      { item: "Shared inference GPU", spec: "1x A100 80GB running vLLM multi-LoRA", cloud: "$929/mo", bare: "N/A (cloud recommended for SaaS)", ref: "Lambda Labs A100 80GB reserved ($1.29/hr)" },
+      { item: "API/Control Plane server", spec: "8 vCPU, 32GB RAM", cloud: "$55/mo", bare: "$55/mo", ref: "Hetzner AX42" },
+      { item: "Observability server", spec: "4 vCPU, 16GB RAM", cloud: "$40/mo", bare: "$40/mo", ref: "Hetzner AX22" },
+    ],
+    storage: [
+      { item: "All storage (Qdrant, PostgreSQL, ClickHouse, MinIO)", spec: "~850GB", cost: "$5/mo backup only", ref: "Hetzner Storage Box, node storage included" },
+    ],
+    software: "$0/mo (all open-source)",
+    thirdParty: [
+      { item: "Stripe transaction fees", cost: "~$150/mo at $5K MRR", ref: "Stripe standard: 2.9% + $0.30/txn (stripe.com/pricing)" },
+    ],
+    human: {
+      setup: "$75,000-$120,000 (500-800 engineer-hours, 3-5 months)",
+      monthly: "$6,000-$9,000/mo (40-60 hours/month)",
+      ref: "Based on $150/hr blended rate for full-stack + ML + DevOps",
+    },
+    total: {
+      cloud: "~$8,900/mo + $100,000 initial build",
+    },
+  },
+  production: {
+    title: "Production (100+ tenants, multi-tier)",
+    compute: [
+      { item: "Shared tier GPUs (starter tenants)", spec: "4x A100 80GB, vLLM + PagedAttention", cloud: "$3,716/mo", bare: "N/A", ref: "Lambda Labs 4x A100 80GB reserved" },
+      { item: "Pro tier GPUs (isolated)", spec: "4x L40S (48GB each)", cloud: "$2,131/mo", bare: "N/A", ref: "RunPod L40S on-demand ($0.74/hr x 4)" },
+      { item: "Enterprise dedicated GPUs", spec: "4x H100 80GB", cloud: "$7,171/mo", bare: "$10,000/mo", ref: "Lambda Labs H100 ($2.49/hr), OVH dedicated ~$2,500/ea" },
+      { item: "K8s CPU cluster", spec: "5x nodes, 16 vCPU / 64GB", cloud: "$375/mo", bare: "$375/mo", ref: "Hetzner AX52 x5" },
+      { item: "Sandbox pool", spec: "3x nodes, 8 vCPU / 32GB", cloud: "$165/mo", bare: "$165/mo", ref: "Hetzner AX42 x3" },
+    ],
+    storage: [
+      { item: "Qdrant cluster + PostgreSQL HA + MinIO + ClickHouse + Backups", spec: "~15TB total", cost: "$175-$500/mo", ref: "Hetzner volumes + Storage Box; AWS EBS + S3 for cloud" },
+    ],
+    software: "$0/mo (all open-source)",
+    thirdParty: [
+      { item: "Stripe fees at $100K MRR", cost: "~$2,950/mo", ref: "Stripe 2.9% + $0.30" },
+      { item: "PagerDuty + Cloudflare Pro", cost: "~$135/mo", ref: "PagerDuty Standard ($29/user x 3), Cloudflare Pro ($20/mo)" },
+    ],
+    human: {
+      setup: "$300,000-$450,000 (2,000-3,000 hours, 6-9 months, 2-3 engineers)",
+      monthly: "$15,000-$22,500/mo (1.5 FTE equivalent)",
+      ref: "Based on $150/hr or $180K/yr FTE loaded cost",
+    },
+    total: {
+      cloud: "~$36,000/mo + $375,000 initial build",
+    },
+  },
+};
+
+// ─── CostBreakdown Component ───────────────────────────────────────────────────
+
+function CostTier({ tier, accentColor }) {
+  return (
+    <div className="cost-tier">
+      <div className="cost-tier-title">{tier.title}</div>
+
+      <div className="sub-label" style={{ color: accentColor, marginBottom: 8 }}>Compute</div>
+      <table className="cost-table">
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th>Spec</th>
+            <th>Cloud Cost</th>
+            <th>Bare Metal</th>
+          </tr>
+        </thead>
+        <tbody>
+          {tier.compute.map((row, i) => (
+            <tr key={i}>
+              <td>{row.item}</td>
+              <td style={{ color: G.muted }}>{row.spec}</td>
+              <td>{row.cloud}</td>
+              <td style={{ color: G.muted }}>{row.bare}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <div className="cost-ref">
+        Sources: {tier.compute.map(r => r.ref).join(" · ")}
+      </div>
+
+      <div className="sub-label" style={{ color: accentColor, marginBottom: 8 }}>Storage</div>
+      <table className="cost-table">
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th>Spec</th>
+            <th>Cost</th>
+          </tr>
+        </thead>
+        <tbody>
+          {tier.storage.map((row, i) => (
+            <tr key={i}>
+              <td>{row.item}</td>
+              <td style={{ color: G.muted }}>{row.spec}</td>
+              <td>{row.cost}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <div className="cost-ref">
+        Sources: {tier.storage.map(r => r.ref).join(" · ")}
+      </div>
+
+      <div className="sub-label" style={{ color: accentColor, marginBottom: 8 }}>Software</div>
+      <div className="cost-software">{tier.software}</div>
+
+      {tier.thirdParty && tier.thirdParty.length > 0 && (
+        <>
+          <div className="sub-label" style={{ color: accentColor, marginBottom: 8 }}>Third-Party Services</div>
+          <table className="cost-table">
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th>Cost</th>
+              </tr>
+            </thead>
+            <tbody>
+              {tier.thirdParty.map((row, i) => (
+                <tr key={i}>
+                  <td>{row.item}</td>
+                  <td>{row.cost}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <div className="cost-ref">
+            Sources: {tier.thirdParty.map(r => r.ref).join(" · ")}
+          </div>
+        </>
+      )}
+
+      <div className="sub-label" style={{ color: accentColor, marginBottom: 8 }}>Human Costs</div>
+      <div className="cost-human">
+        <div className="cost-human-row">
+          <span className="cost-human-label">Setup (one-time)</span>
+          <span className="cost-human-value">{tier.human.setup}</span>
+        </div>
+        <div className="cost-human-row">
+          <span className="cost-human-label">Ongoing maintenance</span>
+          <span className="cost-human-value">{tier.human.monthly}</span>
+        </div>
+        <div className="cost-ref" style={{ marginBottom: 0, marginTop: 8 }}>Source: {tier.human.ref}</div>
+      </div>
+
+      <div className="cost-total" style={{ background: accentColor + "0e", border: `1px solid ${accentColor}35` }}>
+        <div className="cost-total-label" style={{ color: accentColor }}>Total Estimated Cost</div>
+        <div className="cost-total-value">{tier.total.cloud}</div>
+        {tier.total.bare && (
+          <div className="cost-total-detail">Bare metal alternative: {tier.total.bare}</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function CostBreakdown({ costs, accentColor }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="cost-section">
+      <div className="cost-toggle" onClick={() => setOpen(v => !v)}>
+        <span className="cost-toggle-label">Implementation Costs</span>
+        <span className={`cost-arrow ${open ? "open" : ""}`}>▾</span>
+      </div>
+      {open && (
+        <div className="cost-body">
+          <CostTier tier={costs.mvp} accentColor={accentColor} />
+          <CostTier tier={costs.production} accentColor={accentColor} />
+        </div>
+      )}
+    </div>
+  );
+}
+
 function Code({ html }) {
   return <div className="code-block" dangerouslySetInnerHTML={{ __html: html }} />;
 }
@@ -868,7 +1114,7 @@ export default function ArchitectureDeepDive() {
         {showDiagram && <ArchDiagram variant={arch === "aria" ? "aria" : "localmind"} />}
         <div className="arch-tabs">
           <button type="button" className={`arch-tab ${arch === "aria" ? "t-cyan" : ""}`} onClick={() => setArch("aria")}>
-            🏢 Arch 1 — ARIA Internal Chatbot
+            🏢 Arch 1 — A.R.I.A. Internal Chatbot
           </button>
           <button type="button" className={`arch-tab ${arch === "localmind" ? "t-purple" : ""}`} onClick={() => setArch("localmind")}>
             🚀 Arch 2 — LocalMind SaaS Platform
@@ -876,15 +1122,19 @@ export default function ArchitectureDeepDive() {
         </div>
         <div className={`arch-intro ${arch === "aria" ? "ai-cyan" : "ai-purple"}`}>
           {arch === "aria" ? (
-            <><span className="ai-strong-cyan">ARIA — Adaptive Retrieval Intelligence Architecture</span>On-prem AI chatbot deployed inside the customer's network. Zero-Egress installs the system, trains internal engineers to maintain it, and provides ongoing support. All inference runs locally. True zero data egress.</>
+            <><span className="ai-strong-cyan">A.R.I.A. (Adaptive Retrieval Intelligence Architecture)</span>On-prem AI chatbot deployed inside the customer's network. Zero-Egress installs the system, trains internal engineers to maintain it, and provides ongoing support. All inference runs locally. True zero data egress.</>
           ) : (
             <><span className="ai-strong-purple">LocalMind — Privacy-First Agentic AI SaaS Platform</span>Multi-tenant agentic AI platform. Dual delivery: hosted SaaS or on-prem installation. Hosted: no third-party AI dependency, all data stays within LocalMind infrastructure. On-prem: true zero data egress. Install, train, support model.</>
           )}
         </div>
         <div className="sec-label" style={{ color: a }}>{layers.length} Layers — Click Each to Expand</div>
         {layers.map((l, i) => <Layer key={i} layer={l} index={i} />)}
+        <CostBreakdown
+          costs={arch === "aria" ? ARIA_COSTS : LOCALMIND_COSTS}
+          accentColor={a}
+        />
         <div className="footer-bar">
-          {arch === "aria" ? "ARIA · 8 Layers · Self-Learning · Hybrid Deploy · Zero Cloud Dependency" : "LocalMind · 8 Layers · Multi-Tenant · Agentic · Privacy-First SaaS"}
+          {arch === "aria" ? "A.R.I.A. · 8 Layers · Self-Learning · Hybrid Deploy · Zero Cloud Dependency" : "LocalMind · 8 Layers · Multi-Tenant · Agentic · Privacy-First SaaS"}
         </div>
       </div>
     </>

@@ -241,7 +241,7 @@ export default function ArchDiagram({ variant }) {
         className="arch-diagram-svg"
         viewBox={`0 0 ${viewW} ${viewH}`}
         xmlns="http://www.w3.org/2000/svg"
-        aria-label={`${isAria ? "ARIA" : "LocalMind"} architecture diagram`}
+        aria-label={`${isAria ? "A.R.I.A." : "LocalMind"} architecture diagram`}
       >
         <defs>
           <marker id={markerId} markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
