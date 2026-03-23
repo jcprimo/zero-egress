@@ -113,6 +113,14 @@ body{background:${G.bg};color:${G.text};font-family:'DM Sans',sans-serif;}
 .cost-table td{padding:8px 12px;border-bottom:1px solid ${G.faint};color:${G.text};}
 .cost-table td:first-child{font-weight:600;color:#d8eaf8;}
 .cost-ref{font-size:11px;color:${G.muted};font-style:italic;margin-top:4px;margin-bottom:16px;line-height:1.5;}
+.case-sources{margin-top:12px;padding-top:10px;border-top:1px solid ${G.border};display:flex;flex-direction:column;gap:4px;}
+.case-sources a{font-size:11px;color:${G.cyan};text-decoration:none;font-family:'IBM Plex Mono',monospace;}
+.case-sources a:hover{text-decoration:underline;}
+.table-sources{font-size:11px;color:${G.muted};margin-top:8px;line-height:1.6;}
+.table-sources a{color:${G.cyan};text-decoration:none;}
+.table-sources a:hover{text-decoration:underline;}
+.tool-docs-link{font-family:'IBM Plex Mono',monospace;font-size:9px;padding:2px 6px;border-radius:4px;background:rgba(0,212,255,.08);color:${G.cyan};text-decoration:none;letter-spacing:1px;}
+.tool-docs-link:hover{background:rgba(0,212,255,.15);}
 .cost-software{padding:10px 14px;background:${G.faint};border-radius:8px;font-size:13px;color:${G.green};margin-bottom:12px;}
 .cost-human{background:${G.faint};border-radius:8px;padding:14px 16px;margin-bottom:12px;}
 .cost-human-row{display:flex;justify-content:space-between;margin-bottom:6px;font-size:13px;}
@@ -178,9 +186,9 @@ app = App(token=SLACK_TOKEN, signing_secret=SLACK_SECRET)
 }`},
     ],
     tools:[
-      {name:"Apache Kafka",role:"EVENT BUS",what:"A distributed message streaming platform that acts as the backbone decoupling data producers (connectors) from consumers (processors). Stores messages durably on disk with configurable retention. Multiple consumers can read the same stream independently without affecting each other.",why:"Without Kafka, every connector would need to directly call every downstream service — a fragile web of dependencies. Kafka makes the pipeline resilient and horizontally scalable. If the embedding engine crashes, Kafka holds messages until it recovers."},
-      {name:"n8n (self-hosted)",role:"NO-CODE ORCHESTRATION",what:"An open-source workflow automation tool with 300+ pre-built integrations covering Confluence, HubSpot, Notion, Google Drive, Zendesk, and more. Provides a visual drag-and-drop editor. Critical feature: fully self-hostable, so your data never touches n8n's cloud servers.",why:"Saves weeks of custom connector code for common tools. Non-engineering teams (ops, HR, support) can build and maintain their own data flows without touching the codebase."},
-      {name:"Unstructured.io",role:"DOCUMENT PARSER",what:"Extracts clean structured text from real-world messy formats: scanned PDFs with OCR, multi-column layouts, PowerPoint slides, Word docs, HTML pages, Excel tables, and more. Uses computer vision and layout analysis to correctly reconstruct document structure.",why:"Most company knowledge lives in PDFs and Office docs. Naive PDF parsers extract garbled text from complex layouts. Unstructured.io is the difference between indexing 90% of your content versus 50%."},
+      {name:"Apache Kafka",role:"EVENT BUS",url:"https://kafka.apache.org/",what:"A distributed message streaming platform that acts as the backbone decoupling data producers (connectors) from consumers (processors). Stores messages durably on disk with configurable retention. Multiple consumers can read the same stream independently without affecting each other.",why:"Without Kafka, every connector would need to directly call every downstream service — a fragile web of dependencies. Kafka makes the pipeline resilient and horizontally scalable. If the embedding engine crashes, Kafka holds messages until it recovers."},
+      {name:"n8n (self-hosted)",role:"NO-CODE ORCHESTRATION",url:"https://n8n.io/",what:"An open-source workflow automation tool with 300+ pre-built integrations covering Confluence, HubSpot, Notion, Google Drive, Zendesk, and more. Provides a visual drag-and-drop editor. Critical feature: fully self-hostable, so your data never touches n8n's cloud servers.",why:"Saves weeks of custom connector code for common tools. Non-engineering teams (ops, HR, support) can build and maintain their own data flows without touching the codebase."},
+      {name:"Unstructured.io",role:"DOCUMENT PARSER",url:"https://unstructured.io/",what:"Extracts clean structured text from real-world messy formats: scanned PDFs with OCR, multi-column layouts, PowerPoint slides, Word docs, HTML pages, Excel tables, and more. Uses computer vision and layout analysis to correctly reconstruct document structure.",why:"Most company knowledge lives in PDFs and Office docs. Naive PDF parsers extract garbled text from complex layouts. Unstructured.io is the difference between indexing 90% of your content versus 50%."},
     ]
   },
   {
@@ -218,9 +226,9 @@ md = MarkdownHeaderTextSplitter(headers_to_split_on=[
     } <span style="color:#00d4ff">for</span> i, c <span style="color:#00d4ff">in</span> enumerate(chunks) <span style="color:#00d4ff">if</span> len(c) > <span style="color:#22d3a0">50</span>]`},
     ],
     tools:[
-      {name:"LangChain Text Splitters",role:"CHUNKING ENGINE",what:"A collection of battle-tested text splitting algorithms. RecursiveCharacterTextSplitter respects natural text boundaries (paragraphs → sentences → words) rather than blindly cutting at a character limit. Includes specialized splitters for Python, JavaScript, Markdown, HTML, LaTeX, and JSON.",why:"Naive character splitting cuts sentences mid-thought, destroying semantic meaning. LangChain's splitters preserve coherent units which directly improves downstream retrieval quality — better chunks = better answers."},
-      {name:"spaCy",role:"NLP PREPROCESSING",what:"Industrial-strength NLP library providing sentence boundary detection, named entity recognition, part-of-speech tagging, and text classification. Used to enforce linguistically correct split points and extract key entities as metadata for enriched filtering.",why:"Ensures splits happen at natural linguistic boundaries — not arbitrary positions. Entity extraction enriches chunk metadata so you can filter by 'chunks mentioning product X' or 'chunks by author Y'."},
-      {name:"PostgreSQL",role:"METADATA STORE",what:"Stores the metadata record for every indexed chunk: source URL, author, creation date, content type, and its SHA256 deduplication hash alongside the Qdrant vector ID. Enables complex filtered queries that vector databases handle poorly.",why:"Vector databases excel at similarity search but aren't optimized for relational metadata queries. PostgreSQL fills the gap — 'find all chunks from Confluence written after Jan 2025 tagged as engineering specs'."},
+      {name:"LangChain Text Splitters",role:"CHUNKING ENGINE",url:"https://python.langchain.com/",what:"A collection of battle-tested text splitting algorithms. RecursiveCharacterTextSplitter respects natural text boundaries (paragraphs → sentences → words) rather than blindly cutting at a character limit. Includes specialized splitters for Python, JavaScript, Markdown, HTML, LaTeX, and JSON.",why:"Naive character splitting cuts sentences mid-thought, destroying semantic meaning. LangChain's splitters preserve coherent units which directly improves downstream retrieval quality — better chunks = better answers."},
+      {name:"spaCy",role:"NLP PREPROCESSING",url:"https://spacy.io/",what:"Industrial-strength NLP library providing sentence boundary detection, named entity recognition, part-of-speech tagging, and text classification. Used to enforce linguistically correct split points and extract key entities as metadata for enriched filtering.",why:"Ensures splits happen at natural linguistic boundaries — not arbitrary positions. Entity extraction enriches chunk metadata so you can filter by 'chunks mentioning product X' or 'chunks by author Y'."},
+      {name:"PostgreSQL",role:"METADATA STORE",url:"https://www.postgresql.org/",what:"Stores the metadata record for every indexed chunk: source URL, author, creation date, content type, and its SHA256 deduplication hash alongside the Qdrant vector ID. Enables complex filtered queries that vector databases handle poorly.",why:"Vector databases excel at similarity search but aren't optimized for relational metadata queries. PostgreSQL fills the gap — 'find all chunks from Confluence written after Jan 2025 tagged as engineering specs'."},
     ]
   },
   {
@@ -255,9 +263,9 @@ EMBED_SEM = asyncio.Semaphore(<span style="color:#22d3a0">8</span>)  <span style
         <span style="color:#00d4ff">return await</span> asyncio.gather(*[embed_one(client, t) <span style="color:#00d4ff">for</span> t <span style="color:#00d4ff">in</span> texts])`},
     ],
     tools:[
-      {name:"nomic-embed-text",role:"EMBEDDING MODEL",what:"A 137M parameter open-source embedding model optimized for local deployment. Produces 768-dimensional vectors with an 8192-token context window. Runs on CPU or GPU. Available via Ollama with a single pull command. Apache 2.0 licensed.",why:"Best quality-to-speed ratio for on-prem use. Can process thousands of chunks per minute on a mid-range GPU with zero cloud cost or API rate limits."},
-      {name:"BGE-M3",role:"MULTILINGUAL EMBEDDINGS",what:"State-of-the-art embedding model from BAAI supporting 100+ languages, 8192-token context, and 1024-dimensional vectors. Uniquely supports hybrid retrieval — generates both dense semantic vectors AND sparse keyword representations simultaneously from one model.",why:"If your company operates in multiple languages or you need maximum retrieval accuracy, BGE-M3's hybrid encoding (dense + sparse from one pass) eliminates the need for a separate keyword search engine."},
-      {name:"Ollama (embedding mode)",role:"LOCAL MODEL SERVER",what:"Ollama serves both chat and embedding models via a REST API on localhost. Handles model loading, GPU memory management, and request queuing automatically. Mirrors the OpenAI embedding endpoint format so existing LangChain/LlamaIndex integrations work without changes.",why:"Zero-config local embedding server. One command to install, one command to pull, clean API to call. Removes all infrastructure friction from running local models."},
+      {name:"nomic-embed-text",role:"EMBEDDING MODEL",url:"https://huggingface.co/nomic-ai/nomic-embed-text-v1.5",what:"A 137M parameter open-source embedding model optimized for local deployment. Produces 768-dimensional vectors with an 8192-token context window. Runs on CPU or GPU. Available via Ollama with a single pull command. Apache 2.0 licensed.",why:"Best quality-to-speed ratio for on-prem use. Can process thousands of chunks per minute on a mid-range GPU with zero cloud cost or API rate limits."},
+      {name:"BGE-M3",role:"MULTILINGUAL EMBEDDINGS",url:"https://huggingface.co/BAAI/bge-m3",what:"State-of-the-art embedding model from BAAI supporting 100+ languages, 8192-token context, and 1024-dimensional vectors. Uniquely supports hybrid retrieval — generates both dense semantic vectors AND sparse keyword representations simultaneously from one model.",why:"If your company operates in multiple languages or you need maximum retrieval accuracy, BGE-M3's hybrid encoding (dense + sparse from one pass) eliminates the need for a separate keyword search engine."},
+      {name:"Ollama (embedding mode)",role:"LOCAL MODEL SERVER",url:"https://ollama.ai/",what:"Ollama serves both chat and embedding models via a REST API on localhost. Handles model loading, GPU memory management, and request queuing automatically. Mirrors the OpenAI embedding endpoint format so existing LangChain/LlamaIndex integrations work without changes.",why:"Zero-config local embedding server. One command to install, one command to pull, clean API to call. Removes all infrastructure friction from running local models."},
     ]
   },
   {
@@ -298,9 +306,9 @@ client.create_payload_index(<span style="color:#f59e0b">"company_knowledge"</spa
         limit=top_k, with_payload=<span style="color:#22d3a0">True</span>)`},
     ],
     tools:[
-      {name:"Qdrant",role:"PRIMARY VECTOR DB",what:"High-performance vector search engine written in Rust. Supports HNSW indexing (sub-millisecond search across millions of vectors), rich payload filtering, sparse vector support for hybrid search, on-disk storage for large datasets, named collections for namespace isolation, and gRPC for high-throughput workloads.",why:"Best self-hosted option — faster than Chroma on large datasets, more features than pgvector (filtering, sparse vectors, collections), and fully open-source with no cloud dependency or data egress."},
-      {name:"ChromaDB",role:"LIGHTWEIGHT ALTERNATIVE",what:"Python-first vector database that runs in-process or as a lightweight server. No separate infrastructure to manage — import and use. Excellent for prototypes and small deployments under 1M vectors.",why:"When you're building an MVP and don't want Qdrant's infrastructure overhead. The abstraction layer between your code and the vector DB means swapping to Qdrant for production is a one-line config change."},
-      {name:"pgvector",role:"SQL-NATIVE OPTION",what:"A PostgreSQL extension adding vector similarity search with standard SQL. Stores embeddings in a column alongside relational data. Enables vector search with SQL JOINs against your existing metadata tables in the same query.",why:"If your team already runs PostgreSQL and wants to minimize infrastructure complexity, pgvector eliminates the need for a separate vector database service entirely."},
+      {name:"Qdrant",role:"PRIMARY VECTOR DB",url:"https://qdrant.tech/documentation/",what:"High-performance vector search engine written in Rust. Supports HNSW indexing (sub-millisecond search across millions of vectors), rich payload filtering, sparse vector support for hybrid search, on-disk storage for large datasets, named collections for namespace isolation, and gRPC for high-throughput workloads.",why:"Best self-hosted option — faster than Chroma on large datasets, more features than pgvector (filtering, sparse vectors, collections), and fully open-source with no cloud dependency or data egress."},
+      {name:"ChromaDB",role:"LIGHTWEIGHT ALTERNATIVE",url:"https://docs.trychroma.com/",what:"Python-first vector database that runs in-process or as a lightweight server. No separate infrastructure to manage — import and use. Excellent for prototypes and small deployments under 1M vectors.",why:"When you're building an MVP and don't want Qdrant's infrastructure overhead. The abstraction layer between your code and the vector DB means swapping to Qdrant for production is a one-line config change."},
+      {name:"pgvector",role:"SQL-NATIVE OPTION",url:"https://github.com/pgvector/pgvector",what:"A PostgreSQL extension adding vector similarity search with standard SQL. Stores embeddings in a column alongside relational data. Enables vector search with SQL JOINs against your existing metadata tables in the same query.",why:"If your team already runs PostgreSQL and wants to minimize infrastructure complexity, pgvector eliminates the need for a separate vector database service entirely."},
     ]
   },
   {
@@ -342,9 +350,9 @@ LLM_MODEL=<span style="color:#f59e0b">llama3.3</span>
 <span style="color:#2a4a60"># ANTHROPIC_API_KEY=sk-ant-your-real-key</span>`},
     ],
     tools:[
-      {name:"Ollama",role:"INFERENCE SERVER",what:"Manages model downloads, quantization selection, GPU offloading, and API serving automatically. Runs an OpenAI-compatible REST API on port 11434 by default. Supports Mac (Apple Silicon Metal), Linux (CUDA/ROCm), and Windows. Hot-swaps models on demand.",why:"Zero-config local inference. The fastest way to go from 'I want to run a local LLM' to 'I have a working API endpoint' — literally 3 terminal commands. Use for development and medium-load internal deployments."},
-      {name:"llama.cpp (llama-server)",role:"HIGH-PERF INFERENCE",what:"C++ inference engine running quantized GGUF model files. Exposes both OpenAI AND Anthropic-compatible HTTP endpoints natively — no proxy required. Fine-grained control: GPU layer count, KV cache quantization, flash attention, batch size, and concurrent request limits.",why:"When you need maximum tokens/second or specific GPU memory control, llama.cpp beats Ollama on raw performance. This is the exact engine described in the XDA article as the best way to run Qwen3-Coder-Next locally."},
-      {name:"vLLM",role:"HIGH-THROUGHPUT SERVING",what:"Production-grade inference server for NVIDIA GPUs. PagedAttention dramatically improves GPU memory utilization. Continuous batching serves new requests without waiting for the current batch. Tensor parallelism splits models across multiple GPUs. FP8 quantization for H100s.",why:"When you have 20+ concurrent users and serious GPU hardware (A100/H100), vLLM's throughput makes Ollama look like a toy. The production path for teams where many people are using the chatbot simultaneously."},
+      {name:"Ollama",role:"INFERENCE SERVER",url:"https://ollama.ai/",what:"Manages model downloads, quantization selection, GPU offloading, and API serving automatically. Runs an OpenAI-compatible REST API on port 11434 by default. Supports Mac (Apple Silicon Metal), Linux (CUDA/ROCm), and Windows. Hot-swaps models on demand.",why:"Zero-config local inference. The fastest way to go from 'I want to run a local LLM' to 'I have a working API endpoint' — literally 3 terminal commands. Use for development and medium-load internal deployments."},
+      {name:"llama.cpp (llama-server)",role:"HIGH-PERF INFERENCE",url:"https://github.com/ggerganov/llama.cpp",what:"C++ inference engine running quantized GGUF model files. Exposes both OpenAI AND Anthropic-compatible HTTP endpoints natively — no proxy required. Fine-grained control: GPU layer count, KV cache quantization, flash attention, batch size, and concurrent request limits.",why:"When you need maximum tokens/second or specific GPU memory control, llama.cpp beats Ollama on raw performance. This is the exact engine described in the XDA article as the best way to run Qwen3-Coder-Next locally."},
+      {name:"vLLM",role:"HIGH-THROUGHPUT SERVING",url:"https://docs.vllm.ai/en/latest/",what:"Production-grade inference server for NVIDIA GPUs. PagedAttention dramatically improves GPU memory utilization. Continuous batching serves new requests without waiting for the current batch. Tensor parallelism splits models across multiple GPUs. FP8 quantization for H100s.",why:"When you have 20+ concurrent users and serious GPU hardware (A100/H100), vLLM's throughput makes Ollama look like a toy. The production path for teams where many people are using the chatbot simultaneously."},
     ]
   },
   {
@@ -388,9 +396,9 @@ app = FastAPI()
             <span style="color:#00d4ff">await</span> ws.send_text(token)`},
     ],
     tools:[
-      {name:"LlamaIndex",role:"RAG FRAMEWORK",what:"A data framework specifically built for connecting LLMs to external data sources. Provides VectorStoreIndex, QueryEngine, ChatEngine, and RetrievalPipeline abstractions. Deep integrations with Qdrant, Ollama, llama.cpp, and every major vector DB. Supports conversation memory, source citation, and query rewriting out of the box.",why:"More opinionated and RAG-focused than LangChain — less boilerplate for document Q&A use cases. Better out-of-the-box retrieval quality through built-in query transformations and response synthesis modes."},
-      {name:"LangChain",role:"AGENT ALTERNATIVE",what:"A broader LLM application framework with chains, agents, tools, and retrieval primitives. More flexible than LlamaIndex. Better when your chatbot needs to execute multi-step agentic workflows, call external APIs, or use complex decision logic beyond pure document retrieval.",why:"Choose LangChain when your chatbot needs to DO things (book meetings, update CRM records, run queries) rather than just answer questions from documents."},
-      {name:"FastAPI",role:"API FRAMEWORK",what:"Async Python web framework with automatic OpenAPI docs, native WebSocket support, and Pydantic validation. Exposes your RAG engine as an HTTP service. Async-native means it handles streaming LLM responses efficiently without blocking threads.",why:"The only modern Python framework that's async-native from the ground up — critical for streaming LLM tokens progressively to clients. Auto-generates API docs that integrating teams (Slack bot, mobile app) can use immediately."},
+      {name:"LlamaIndex",role:"RAG FRAMEWORK",url:"https://docs.llamaindex.ai/",what:"A data framework specifically built for connecting LLMs to external data sources. Provides VectorStoreIndex, QueryEngine, ChatEngine, and RetrievalPipeline abstractions. Deep integrations with Qdrant, Ollama, llama.cpp, and every major vector DB. Supports conversation memory, source citation, and query rewriting out of the box.",why:"More opinionated and RAG-focused than LangChain — less boilerplate for document Q&A use cases. Better out-of-the-box retrieval quality through built-in query transformations and response synthesis modes."},
+      {name:"LangChain",role:"AGENT ALTERNATIVE",url:"https://python.langchain.com/",what:"A broader LLM application framework with chains, agents, tools, and retrieval primitives. More flexible than LlamaIndex. Better when your chatbot needs to execute multi-step agentic workflows, call external APIs, or use complex decision logic beyond pure document retrieval.",why:"Choose LangChain when your chatbot needs to DO things (book meetings, update CRM records, run queries) rather than just answer questions from documents."},
+      {name:"FastAPI",role:"API FRAMEWORK",url:"https://fastapi.tiangolo.com/",what:"Async Python web framework with automatic OpenAPI docs, native WebSocket support, and Pydantic validation. Exposes your RAG engine as an HTTP service. Async-native means it handles streaming LLM responses efficiently without blocking threads.",why:"The only modern Python framework that's async-native from the ground up — critical for streaming LLM tokens progressively to clients. Auto-generates API docs that integrating teams (Slack bot, mobile app) can use immediately."},
     ]
   },
   {
@@ -433,9 +441,9 @@ trainer.train()  <span style="color:#2a4a60"># train on curated feedback dataset
 model.save_pretrained_merged(<span style="color:#f59e0b">"./models/aria-v2"</span>, tokenizer)`},
     ],
     tools:[
-      {name:"Argilla",role:"FEEDBACK PLATFORM",what:"Open-source data annotation and feedback management platform built for LLM workflows. Provides a web UI for reviewing chatbot interactions, rating answer quality, correcting bad responses, adding annotations, and exporting curated JSONL/Parquet training datasets. Fully self-hostable.",why:"Without a structured feedback tool, interaction logs are raw noise. Argilla is the pipeline from 'user clicked thumbs down' to 'curated training example' — it's the human-in-the-loop that makes the learning loop trustworthy."},
-      {name:"Unsloth",role:"FINE-TUNING ENGINE",what:"A library that makes LLM fine-tuning 2-5x faster and 80% more memory-efficient through custom CUDA kernels that optimize the backward pass. Supports LoRA and QLoRA on most open models. Can fine-tune Llama 3.3 70B on a single A100 40GB GPU in a few hours.",why:"Without Unsloth, weekly fine-tuning cycles would require expensive multi-GPU clusters. With Unsloth, a single A100 is enough — making the continuous learning loop economically viable on realistic hardware."},
-      {name:"MLflow",role:"MODEL VERSIONING",what:"Open-source platform for tracking ML experiments, versioning model artifacts, comparing runs, and managing deployments. Records every training run's hyperparameters, evaluation metrics, and output model weights so you can compare versions and roll back if quality drops.",why:"Without versioning, a bad fine-tune could degrade your production chatbot with no way to identify what changed or roll back. MLflow is the safety net that makes iterative improvement safe."},
+      {name:"Argilla",role:"FEEDBACK PLATFORM",url:"https://argilla.io/",what:"Open-source data annotation and feedback management platform built for LLM workflows. Provides a web UI for reviewing chatbot interactions, rating answer quality, correcting bad responses, adding annotations, and exporting curated JSONL/Parquet training datasets. Fully self-hostable.",why:"Without a structured feedback tool, interaction logs are raw noise. Argilla is the pipeline from 'user clicked thumbs down' to 'curated training example' — it's the human-in-the-loop that makes the learning loop trustworthy."},
+      {name:"Unsloth",role:"FINE-TUNING ENGINE",url:"https://unsloth.ai/",what:"A library that makes LLM fine-tuning 2-5x faster and 80% more memory-efficient through custom CUDA kernels that optimize the backward pass. Supports LoRA and QLoRA on most open models. Can fine-tune Llama 3.3 70B on a single A100 40GB GPU in a few hours.",why:"Without Unsloth, weekly fine-tuning cycles would require expensive multi-GPU clusters. With Unsloth, a single A100 is enough — making the continuous learning loop economically viable on realistic hardware."},
+      {name:"MLflow",role:"MODEL VERSIONING",url:"https://mlflow.org/",what:"Open-source platform for tracking ML experiments, versioning model artifacts, comparing runs, and managing deployments. Records every training run's hyperparameters, evaluation metrics, and output model weights so you can compare versions and roll back if quality drops.",why:"Without versioning, a bad fine-tune could degrade your production chatbot with no way to identify what changed or roll back. MLflow is the safety net that makes iterative improvement safe."},
     ]
   },
   {
@@ -480,9 +488,9 @@ app = AsyncApp(token=SLACK_TOKEN, signing_secret=SLACK_SECRET)
     <span style="color:#00d4ff">await</span> say(r.json()[<span style="color:#f59e0b">"answer"</span>])`},
     ],
     tools:[
-      {name:"Open WebUI",role:"CHAT INTERFACE",what:"Feature-complete self-hosted web UI providing chat history, user management, model selection, document upload, admin controls, and multi-user support. Built with SvelteKit. Docker deployment. Supports OpenAI and Anthropic API formats, custom API endpoints, and OAuth SSO.",why:"Adoption is everything for internal tools. Open WebUI looks like ChatGPT — employees instantly know how to use it with zero training. Building a custom chat UI from scratch would take months and still be worse."},
-      {name:"Keycloak",role:"IDENTITY PROVIDER",what:"Enterprise-grade open-source identity and access management (IAM). Integrates with Active Directory/LDAP, provides SAML/OIDC SSO, supports MFA, manages roles and groups, and generates full audit logs. Runs as a self-hosted Docker service.",why:"A chatbot with access to all company knowledge must be properly secured with enterprise-grade auth. Keycloak is the production-ready self-hosted answer — handles edge cases (token refresh, MFA, group sync) that would take months to build correctly in-house."},
-      {name:"Nginx",role:"REVERSE PROXY",what:"High-performance web server used as the single front door to all internal services. Handles TLS termination (HTTPS), request routing to Open WebUI vs RAG API vs Argilla, Keycloak auth guard middleware, rate limiting per IP, and access logging.",why:"Centralizes security, logging, and routing in one place. Without Nginx, you'd need TLS configured on every individual service. Nginx makes the entire stack accessible at one URL with one certificate."},
+      {name:"Open WebUI",role:"CHAT INTERFACE",url:"https://openwebui.com/",what:"Feature-complete self-hosted web UI providing chat history, user management, model selection, document upload, admin controls, and multi-user support. Built with SvelteKit. Docker deployment. Supports OpenAI and Anthropic API formats, custom API endpoints, and OAuth SSO.",why:"Adoption is everything for internal tools. Open WebUI looks like ChatGPT — employees instantly know how to use it with zero training. Building a custom chat UI from scratch would take months and still be worse."},
+      {name:"Keycloak",role:"IDENTITY PROVIDER",url:"https://www.keycloak.org/",what:"Enterprise-grade open-source identity and access management (IAM). Integrates with Active Directory/LDAP, provides SAML/OIDC SSO, supports MFA, manages roles and groups, and generates full audit logs. Runs as a self-hosted Docker service.",why:"A chatbot with access to all company knowledge must be properly secured with enterprise-grade auth. Keycloak is the production-ready self-hosted answer — handles edge cases (token refresh, MFA, group sync) that would take months to build correctly in-house."},
+      {name:"Nginx",role:"REVERSE PROXY",url:"https://nginx.org/",what:"High-performance web server used as the single front door to all internal services. Handles TLS termination (HTTPS), request routing to Open WebUI vs RAG API vs Argilla, Keycloak auth guard middleware, rate limiting per IP, and access logging.",why:"Centralizes security, logging, and routing in one place. Without Nginx, you'd need TLS configured on every individual service. Nginx makes the entire stack accessible at one URL with one certificate."},
     ]
   },
 ];
@@ -542,9 +550,9 @@ const ARCH2 = [
         <span style="color:#f59e0b">"INSERT INTO events_processed(event_id) VALUES($1)"</span>, event.id)`},
     ],
     tools:[
-      {name:"PostgreSQL",role:"TENANT REGISTRY",what:"Stores the authoritative record of every tenant — plan, limits, model config, API keys, and billing status. Uses ACID transactions to guarantee consistency when provisioning new tenants or processing billing events. Tenant config is cached in Redis for performance, but PostgreSQL is always the source of truth.",why:"Billing and access control decisions require strong consistency — you never want eventual consistency when deciding whether to authorize a request or charge a customer. PostgreSQL's ACID guarantees are the right foundation for this."},
-      {name:"Stripe",role:"BILLING ENGINE",what:"Handles subscription management, payment processing, invoicing, proration on plan upgrades, failed payment dunning, and tax compliance. Webhooks notify your control plane of every lifecycle event. Supports usage-based billing via Stripe Meters for token overage charges.",why:"Billing is not a competitive advantage — it's plumbing. The failure modes of rolling your own billing (failed payment handling, proration bugs, tax compliance) are business-critical and not worth building. Stripe has solved these problems for millions of businesses."},
-      {name:"Terraform",role:"INFRA PROVISIONING",what:"Infrastructure-as-code tool that declares tenant infrastructure as config files. When a new enterprise tenant onboards, running terraform apply creates their dedicated container, isolated Docker network, Qdrant collection, and DNS entry — repeatably and auditibly. Terraform state tracks exactly what's provisioned for each tenant.",why:"Manual enterprise tenant provisioning is error-prone, slow, and doesn't scale past a handful of tenants. Terraform makes onboarding a deterministic, automated, 2-minute operation."},
+      {name:"PostgreSQL",role:"TENANT REGISTRY",url:"https://www.postgresql.org/",what:"Stores the authoritative record of every tenant — plan, limits, model config, API keys, and billing status. Uses ACID transactions to guarantee consistency when provisioning new tenants or processing billing events. Tenant config is cached in Redis for performance, but PostgreSQL is always the source of truth.",why:"Billing and access control decisions require strong consistency — you never want eventual consistency when deciding whether to authorize a request or charge a customer. PostgreSQL's ACID guarantees are the right foundation for this."},
+      {name:"Stripe",role:"BILLING ENGINE",url:"https://stripe.com/docs",what:"Handles subscription management, payment processing, invoicing, proration on plan upgrades, failed payment dunning, and tax compliance. Webhooks notify your control plane of every lifecycle event. Supports usage-based billing via Stripe Meters for token overage charges.",why:"Billing is not a competitive advantage — it's plumbing. The failure modes of rolling your own billing (failed payment handling, proration bugs, tax compliance) are business-critical and not worth building. Stripe has solved these problems for millions of businesses."},
+      {name:"Terraform",role:"INFRA PROVISIONING",url:"https://www.terraform.io/",what:"Infrastructure-as-code tool that declares tenant infrastructure as config files. When a new enterprise tenant onboards, running terraform apply creates their dedicated container, isolated Docker network, Qdrant collection, and DNS entry — repeatably and auditibly. Terraform state tracks exactly what's provisioned for each tenant.",why:"Manual enterprise tenant provisioning is error-prone, slow, and doesn't scale past a handful of tenants. Terraform makes onboarding a deterministic, automated, 2-minute operation."},
     ]
   },
   {
@@ -584,9 +592,9 @@ const ARCH2 = [
 <span style="color:#a855f7">GROUP BY</span> tenant_id;`},
     ],
     tools:[
-      {name:"Kong Gateway",role:"API GATEWAY",what:"Open-source Lua-based API gateway handling authentication, rate limiting, request transformation, logging, and traffic routing. Configured declaratively via YAML or via a REST admin API. Plugin ecosystem with 50+ pre-built integrations for auth, observability, and traffic management. Runs as a stateless service backed by PostgreSQL.",why:"Centralizes all cross-cutting concerns (auth, rate limits, logging, routing) in one place rather than duplicating logic in every service. The industry standard for self-hosted API gateway — used by thousands of production SaaS platforms."},
-      {name:"Redis",role:"RATE LIMIT STATE",what:"In-memory data store used for distributed rate limit counters. When you run multiple Kong instances, Redis keeps per-tenant request counts synchronized across all instances using atomic increment operations with TTL-based expiry for sliding window rate limits.",why:"Rate limiting requires shared state across requests and across gateway replicas. Redis's sub-millisecond atomic operations make it the perfect fit — checking and incrementing a counter adds <1ms to request latency."},
-      {name:"ClickHouse",role:"USAGE ANALYTICS DB",what:"Columnar OLAP database built for high-throughput write workloads and fast analytical queries. Can ingest millions of usage events per second while enabling sub-second aggregation queries across months of time-series data. Much faster than PostgreSQL for aggregate queries over large datasets.",why:"You'll log a usage event for every LLM request — potentially millions of rows per day across all tenants. ClickHouse is purpose-built for exactly this pattern. Running billing queries on PostgreSQL at this scale would take minutes; ClickHouse does it in milliseconds."},
+      {name:"Kong Gateway",role:"API GATEWAY",url:"https://konghq.com/",what:"Open-source Lua-based API gateway handling authentication, rate limiting, request transformation, logging, and traffic routing. Configured declaratively via YAML or via a REST admin API. Plugin ecosystem with 50+ pre-built integrations for auth, observability, and traffic management. Runs as a stateless service backed by PostgreSQL.",why:"Centralizes all cross-cutting concerns (auth, rate limits, logging, routing) in one place rather than duplicating logic in every service. The industry standard for self-hosted API gateway — used by thousands of production SaaS platforms."},
+      {name:"Redis",role:"RATE LIMIT STATE",url:"https://redis.io/",what:"In-memory data store used for distributed rate limit counters. When you run multiple Kong instances, Redis keeps per-tenant request counts synchronized across all instances using atomic increment operations with TTL-based expiry for sliding window rate limits.",why:"Rate limiting requires shared state across requests and across gateway replicas. Redis's sub-millisecond atomic operations make it the perfect fit — checking and incrementing a counter adds <1ms to request latency."},
+      {name:"ClickHouse",role:"USAGE ANALYTICS DB",url:"https://clickhouse.com/",what:"Columnar OLAP database built for high-throughput write workloads and fast analytical queries. Can ingest millions of usage events per second while enabling sub-second aggregation queries across months of time-series data. Much faster than PostgreSQL for aggregate queries over large datasets.",why:"You'll log a usage event for every LLM request — potentially millions of rows per day across all tenants. ClickHouse is purpose-built for exactly this pattern. Running billing queries on PostgreSQL at this scale would take minutes; ClickHouse does it in milliseconds."},
     ]
   },
   {
@@ -634,9 +642,9 @@ LORA_ALLOWLIST = {<span style="color:#f59e0b">"base"</span>, <span style="color:
         memory: <span style="color:#f59e0b">"128Gi"</span>`},
     ],
     tools:[
-      {name:"vLLM",role:"SHARED TIER INFERENCE",what:"High-throughput LLM serving with PagedAttention (treats GPU memory like virtual memory, eliminating fragmentation), continuous batching (serves new requests mid-batch without waiting), multi-LoRA support (swap tenant adapters per request), and FP8 quantization support. Native Anthropic Messages API endpoint.",why:"For the shared starter/pro tiers, vLLM's continuous batching delivers 3-5x more throughput versus naive serving — you serve more tenants on the same hardware, which is the direct lever on your gross margins."},
-      {name:"llama.cpp (llama-server)",role:"DEDICATED TIER INFERENCE",what:"For enterprise tenants who need their own isolated inference process with predictable performance. llama-server speaks the Anthropic Messages API natively, gives fine-grained GPU memory control, and runs as a standalone process with no shared memory with other tenants.",why:"Dedicated processes give enterprise tenants the data isolation guarantee they're paying a premium for. Their tokens never share a KV cache with another tenant's data — a non-negotiable requirement for defense, healthcare, and financial clients."},
-      {name:"Kubernetes + NVIDIA GPU Operator",role:"CONTAINER ORCHESTRATION",what:"Kubernetes schedules inference containers across your GPU node fleet, enforces resource limits, handles container restarts, manages rolling deployments, and scales pods based on queue depth. The NVIDIA GPU Operator automates driver installation, GPU resource quota configuration, and GPU passthrough to containers.",why:"Without Kubernetes, managing inference containers across multiple GPU machines is a fragile manual operation. K8s handles scheduling, health checks, resource limits, and failure recovery automatically — your ops overhead stays flat as you scale from 10 to 1000 tenants."},
+      {name:"vLLM",role:"SHARED TIER INFERENCE",url:"https://docs.vllm.ai/en/latest/",what:"High-throughput LLM serving with PagedAttention (treats GPU memory like virtual memory, eliminating fragmentation), continuous batching (serves new requests mid-batch without waiting), multi-LoRA support (swap tenant adapters per request), and FP8 quantization support. Native Anthropic Messages API endpoint.",why:"For the shared starter/pro tiers, vLLM's continuous batching delivers 3-5x more throughput versus naive serving — you serve more tenants on the same hardware, which is the direct lever on your gross margins."},
+      {name:"llama.cpp (llama-server)",role:"DEDICATED TIER INFERENCE",url:"https://github.com/ggerganov/llama.cpp",what:"For enterprise tenants who need their own isolated inference process with predictable performance. llama-server speaks the Anthropic Messages API natively, gives fine-grained GPU memory control, and runs as a standalone process with no shared memory with other tenants.",why:"Dedicated processes give enterprise tenants the data isolation guarantee they're paying a premium for. Their tokens never share a KV cache with another tenant's data — a non-negotiable requirement for defense, healthcare, and financial clients."},
+      {name:"Kubernetes + NVIDIA GPU Operator",role:"CONTAINER ORCHESTRATION",url:"https://docs.nvidia.com/datacenter/cloud-native/gpu-operator/latest/index.html",what:"Kubernetes schedules inference containers across your GPU node fleet, enforces resource limits, handles container restarts, manages rolling deployments, and scales pods based on queue depth. The NVIDIA GPU Operator automates driver installation, GPU resource quota configuration, and GPU passthrough to containers.",why:"Without Kubernetes, managing inference containers across multiple GPU machines is a fragile manual operation. K8s handles scheduling, health checks, resource limits, and failure recovery automatically — your ops overhead stays flat as you scale from 10 to 1000 tenants."},
     ]
   },
   {
@@ -685,9 +693,9 @@ client = docker.from_env()
     })`},
     ],
     tools:[
-      {name:"Claude Code (open harness)",role:"AGENT FRAMEWORK",what:"Claude Code's execution loop provides tool definitions (read_file, write_file, run_command, search), conversation state management, file system integration, and a permission system for tool execution — all out of the box. As the article explains: it doesn't verify it's talking to a Claude model. Any Anthropic-API-compatible server works as the brain.",why:"Building a production-grade agentic harness from scratch — with proper tool execution, error recovery, multi-step planning, and permission management — is 6+ months of engineering. Claude Code's harness is battle-tested and familiar to developers. You monetize the infrastructure and isolation layer."},
-      {name:"MCP (Model Context Protocol)",role:"TOOL STANDARD",what:"Anthropic's open standard for connecting LLMs to tools and data sources via JSON-RPC. An MCP server exposes a tool catalog that clients (Claude Code, custom harnesses) can discover and invoke. Tools can be local (file operations, shell) or remote (GitHub, Slack, databases).",why:"Building your tool layer on MCP means it's compatible with any MCP-supporting client — future-proofing your platform as the harness ecosystem evolves. MCP is being adopted rapidly as the standard for agentic tool integration."},
-      {name:"Sandboxed Docker exec",role:"SECURE EXECUTION",what:"Every shell command or code execution runs in a freshly created Docker container with strict resource limits (CPU, memory, network), an isolated filesystem mounted from the tenant's workspace only, no outbound internet access (unless explicitly configured), and containers destroyed after the session ends.",why:"Without sandboxing, a prompt injection attack could run rm -rf, exfiltrate API keys, or pivot to other tenant environments. Sandbox isolation is the security foundation of the entire multi-tenant agentic platform — it's not optional."},
+      {name:"Claude Code (open harness)",role:"AGENT FRAMEWORK",url:"https://claude.ai/code",what:"Claude Code's execution loop provides tool definitions (read_file, write_file, run_command, search), conversation state management, file system integration, and a permission system for tool execution — all out of the box. As the article explains: it doesn't verify it's talking to a Claude model. Any Anthropic-API-compatible server works as the brain.",why:"Building a production-grade agentic harness from scratch — with proper tool execution, error recovery, multi-step planning, and permission management — is 6+ months of engineering. Claude Code's harness is battle-tested and familiar to developers. You monetize the infrastructure and isolation layer."},
+      {name:"MCP (Model Context Protocol)",role:"TOOL STANDARD",url:"https://modelcontextprotocol.io/",what:"Anthropic's open standard for connecting LLMs to tools and data sources via JSON-RPC. An MCP server exposes a tool catalog that clients (Claude Code, custom harnesses) can discover and invoke. Tools can be local (file operations, shell) or remote (GitHub, Slack, databases).",why:"Building your tool layer on MCP means it's compatible with any MCP-supporting client — future-proofing your platform as the harness ecosystem evolves. MCP is being adopted rapidly as the standard for agentic tool integration."},
+      {name:"Sandboxed Docker exec",role:"SECURE EXECUTION",url:"https://docs.docker.com/compose/",what:"Every shell command or code execution runs in a freshly created Docker container with strict resource limits (CPU, memory, network), an isolated filesystem mounted from the tenant's workspace only, no outbound internet access (unless explicitly configured), and containers destroyed after the session ends.",why:"Without sandboxing, a prompt injection attack could run rm -rf, exfiltrate API keys, or pivot to other tenant environments. Sandbox isolation is the security foundation of the entire multi-tenant agentic platform — it's not optional."},
     ]
   },
   {
@@ -715,9 +723,9 @@ client = docker.from_env()
     <span style="color:#00d4ff">return</span> {<span style="color:#f59e0b">"indexed"</span>: len(chunks)}`},
     ],
     tools:[
-      {name:"Qdrant (namespaced collections)",role:"VECTOR ISOLATION",what:"Qdrant's collection model maps perfectly to tenant isolation — each tenant gets their own named collections with completely independent indices, storage files, and API surface. Collections can be created and deleted programmatically as tenants onboard and churn. All operations on a collection are scoped to that collection only.",why:"Simplest and most reliable way to enforce vector-level data isolation. The naming is server-generated and validated — there is no code path where tenant A's collection name could be substituted for tenant B's."},
-      {name:"MinIO",role:"OBJECT STORAGE",what:"Self-hosted S3-compatible object storage. Stores raw document files, model artifacts, fine-tuning datasets, and agent session workspaces. Per-tenant buckets with IAM policies that restrict each tenant's service account to their own bucket only. Supports bucket versioning and lifecycle policies for automatic cleanup.",why:"S3-compatible means your code works against MinIO in on-prem deployments and AWS S3 in cloud deployments with zero code changes. Per-bucket IAM policies enforce isolation at the storage layer, complementing the application-layer isolation in Qdrant."},
-      {name:"PostgreSQL (per-schema isolation)",role:"METADATA ISOLATION",what:"PostgreSQL schemas give each tenant their own namespace within a single database instance. Tenant metadata, feedback records, document manifests, and usage logs live in their own schema — 'tenant_abc123.documents' cannot be accidentally joined against 'tenant_xyz789.documents'. Separate database roles per tenant enforce this at the connection level.",why:"Efficient for large numbers of tenants (no separate database per tenant) while providing strong logical isolation. Schema-level isolation is enforced by PostgreSQL's permission system, not just application-layer conventions."},
+      {name:"Qdrant (namespaced collections)",role:"VECTOR ISOLATION",url:"https://qdrant.tech/documentation/",what:"Qdrant's collection model maps perfectly to tenant isolation — each tenant gets their own named collections with completely independent indices, storage files, and API surface. Collections can be created and deleted programmatically as tenants onboard and churn. All operations on a collection are scoped to that collection only.",why:"Simplest and most reliable way to enforce vector-level data isolation. The naming is server-generated and validated — there is no code path where tenant A's collection name could be substituted for tenant B's."},
+      {name:"MinIO",role:"OBJECT STORAGE",url:"https://min.io/",what:"Self-hosted S3-compatible object storage. Stores raw document files, model artifacts, fine-tuning datasets, and agent session workspaces. Per-tenant buckets with IAM policies that restrict each tenant's service account to their own bucket only. Supports bucket versioning and lifecycle policies for automatic cleanup.",why:"S3-compatible means your code works against MinIO in on-prem deployments and AWS S3 in cloud deployments with zero code changes. Per-bucket IAM policies enforce isolation at the storage layer, complementing the application-layer isolation in Qdrant."},
+      {name:"PostgreSQL (per-schema isolation)",role:"METADATA ISOLATION",url:"https://www.postgresql.org/",what:"PostgreSQL schemas give each tenant their own namespace within a single database instance. Tenant metadata, feedback records, document manifests, and usage logs live in their own schema — 'tenant_abc123.documents' cannot be accidentally joined against 'tenant_xyz789.documents'. Separate database roles per tenant enforce this at the connection level.",why:"Efficient for large numbers of tenants (no separate database per tenant) while providing strong logical isolation. Schema-level isolation is enforced by PostgreSQL's permission system, not just application-layer conventions."},
     ]
   },
   {
@@ -752,10 +760,10 @@ analyzer, anonymizer = AnalyzerEngine(), AnonymizerEngine()
 clean = redact(raw_text)`},
     ],
     tools:[
-      {name:"Langfuse",role:"LLM OBSERVABILITY",what:"Open-source observability platform built specifically for LLM applications. Captures complete traces: user input → prompt construction → retrieval results → model call parameters → response. Supports evaluation scoring, prompt version comparison, user feedback correlation, and cost tracking per tenant. Self-hostable.",why:"When a tenant reports 'your agent gave a wrong answer,' you need to see the exact prompt, the exact chunks retrieved, and the exact model response — not just error logs. Langfuse makes LLM debugging possible in a way that Datadog or Grafana cannot."},
-      {name:"Grafana + Prometheus",role:"INFRA MONITORING",what:"Prometheus scrapes metrics from all services: vLLM (tokens/second, GPU memory, queue depth), Kong (requests/second, error rates, latency percentiles), Qdrant (query latency, index size), and ClickHouse. Grafana visualizes these with configurable dashboards and alerting rules for SLA breach detection.",why:"The industry-standard open-source monitoring stack. Every service you're running (vLLM, Kong, Qdrant) natively exposes Prometheus metrics — you get comprehensive infrastructure monitoring essentially for free."},
-      {name:"Presidio",role:"PII PROTECTION",what:"Microsoft's open-source PII detection and anonymization engine. Detects 50+ entity types (names, emails, SSNs, credit cards, phone numbers, IP addresses) across 15+ languages using a combination of ML models and rule-based recognizers. Anonymizes by replacement with entity-type placeholders or synthetic data.",why:"Enterprise customers in healthcare, finance, and legal will ask 'how do you ensure our data doesn't contain PII?' before signing. Presidio gives you a demonstrable, auditable answer — automated PII redaction at ingest and output — rather than a policy statement."},
-      {name:"OpenTelemetry",role:"DISTRIBUTED TRACING",what:"An open standard for instrumenting distributed systems with traces, metrics, and logs. Single SDK instruments FastAPI, Kong, Qdrant, and vLLM with a consistent tracing model. Trace IDs propagate across service boundaries so a single slow request can be traced from gateway to inference and back with per-service latency breakdown.",why:"When a request is slow, you need to know exactly which service caused the latency — was it retrieval? Embedding? LLM inference? Network? OpenTelemetry's distributed traces give you precise attribution across your entire service mesh."},
+      {name:"Langfuse",role:"LLM OBSERVABILITY",url:"https://langfuse.com/",what:"Open-source observability platform built specifically for LLM applications. Captures complete traces: user input → prompt construction → retrieval results → model call parameters → response. Supports evaluation scoring, prompt version comparison, user feedback correlation, and cost tracking per tenant. Self-hostable.",why:"When a tenant reports 'your agent gave a wrong answer,' you need to see the exact prompt, the exact chunks retrieved, and the exact model response — not just error logs. Langfuse makes LLM debugging possible in a way that Datadog or Grafana cannot."},
+      {name:"Grafana + Prometheus",role:"INFRA MONITORING",url:"https://grafana.com/",what:"Prometheus scrapes metrics from all services: vLLM (tokens/second, GPU memory, queue depth), Kong (requests/second, error rates, latency percentiles), Qdrant (query latency, index size), and ClickHouse. Grafana visualizes these with configurable dashboards and alerting rules for SLA breach detection.",why:"The industry-standard open-source monitoring stack. Every service you're running (vLLM, Kong, Qdrant) natively exposes Prometheus metrics — you get comprehensive infrastructure monitoring essentially for free."},
+      {name:"Presidio",role:"PII PROTECTION",url:"https://microsoft.github.io/presidio/",what:"Microsoft's open-source PII detection and anonymization engine. Detects 50+ entity types (names, emails, SSNs, credit cards, phone numbers, IP addresses) across 15+ languages using a combination of ML models and rule-based recognizers. Anonymizes by replacement with entity-type placeholders or synthetic data.",why:"Enterprise customers in healthcare, finance, and legal will ask 'how do you ensure our data doesn't contain PII?' before signing. Presidio gives you a demonstrable, auditable answer — automated PII redaction at ingest and output — rather than a policy statement."},
+      {name:"OpenTelemetry",role:"DISTRIBUTED TRACING",url:"https://opentelemetry.io/",what:"An open standard for instrumenting distributed systems with traces, metrics, and logs. Single SDK instruments FastAPI, Kong, Qdrant, and vLLM with a consistent tracing model. Trace IDs propagate across service boundaries so a single slow request can be traced from gateway to inference and back with per-service latency breakdown.",why:"When a request is slow, you need to know exactly which service caused the latency — was it retrieval? Embedding? LLM inference? Network? OpenTelemetry's distributed traces give you precise attribution across your entire service mesh."},
     ]
   },
   {
@@ -811,9 +819,9 @@ result = client.agents.run(
 }`},
     ],
     tools:[
-      {name:"Typer / Click",role:"CLI FRAMEWORK",what:"Typer is built on top of Click and uses Python type hints to auto-generate CLI argument parsers, help text, and shell completion scripts. Click provides the underlying command routing, option parsing, error formatting, and colored terminal output.",why:"The CLI is the primary touch point for developer tenants every single day. A well-built CLI with good help text, autocomplete, and clear error messages is the difference between a tool developers love and one they resent. Typer/Click give you that quality in a fraction of the time."},
-      {name:"OpenAPI Generator",role:"SDK GENERATION",what:"Generates fully typed, idiomatic API client libraries in 50+ languages from an OpenAPI 3.0 specification. Produces request/response types, retry logic, authentication handling, and pagination support. Runs as a Docker container or CLI tool.",why:"Writing and maintaining SDKs in multiple languages manually is prohibitively expensive. Auto-generation means your Python, TypeScript, and Go SDKs are always synchronized with your API spec and you ship language support essentially for free."},
-      {name:"VS Code Extension API",role:"EDITOR INTEGRATION",what:"VS Code's extension API lets you add commands, sidebar panels, inline code suggestions, hover providers, and context menu items to the world's most popular code editor. Extensions are distributed via the VS Code Marketplace with automatic updates.",why:"Developer tools that integrate into the editor get dramatically higher daily usage than standalone tools that require context switching. An in-editor experience is one of the strongest retention and daily-active-user drivers available to a developer tools company."},
+      {name:"Typer / Click",role:"CLI FRAMEWORK",url:"https://typer.tiangolo.com/",what:"Typer is built on top of Click and uses Python type hints to auto-generate CLI argument parsers, help text, and shell completion scripts. Click provides the underlying command routing, option parsing, error formatting, and colored terminal output.",why:"The CLI is the primary touch point for developer tenants every single day. A well-built CLI with good help text, autocomplete, and clear error messages is the difference between a tool developers love and one they resent. Typer/Click give you that quality in a fraction of the time."},
+      {name:"OpenAPI Generator",role:"SDK GENERATION",url:"https://openapi-generator.tech/",what:"Generates fully typed, idiomatic API client libraries in 50+ languages from an OpenAPI 3.0 specification. Produces request/response types, retry logic, authentication handling, and pagination support. Runs as a Docker container or CLI tool.",why:"Writing and maintaining SDKs in multiple languages manually is prohibitively expensive. Auto-generation means your Python, TypeScript, and Go SDKs are always synchronized with your API spec and you ship language support essentially for free."},
+      {name:"VS Code Extension API",role:"EDITOR INTEGRATION",url:"https://code.visualstudio.com/api",what:"VS Code's extension API lets you add commands, sidebar panels, inline code suggestions, hover providers, and context menu items to the world's most popular code editor. Extensions are distributed via the VS Code Marketplace with automatic updates.",why:"Developer tools that integrate into the editor get dramatically higher daily usage than standalone tools that require context switching. An in-editor experience is one of the strongest retention and daily-active-user drivers available to a developer tools company."},
     ]
   },
 ];
@@ -850,31 +858,55 @@ const CASE_STUDIES = [
     tag: "EU · 2020",
     title: "Schrems II",
     body: "The EU Court of Justice struck down the EU-US Privacy Shield agreement, ruling that US surveillance laws made data transfers to the US incompatible with EU fundamental rights. Companies using US-based cloud services for EU citizen data faced immediate legal exposure. For organizations that needed a clear answer rather than a legal grey area, on-prem became the only bulletproof architecture. The case remains the single most consequential event in data sovereignty law.",
+    sources: [
+      { label: "CJEU, Case C-311/18 (Schrems II), July 16, 2020", url: "https://curia.europa.eu/juris/liste.jsf?num=C-311/18" },
+      { label: "EDPB: FAQs on Schrems II Judgment", url: "https://edpb.europa.eu/our-work-tools/our-documents/other/frequently-asked-questions-judgment-court-justice-european-union_en" },
+    ],
   },
   {
     tag: "China · 2021",
     title: "China Data Security Law",
     body: "China's Data Security Law and Personal Information Protection Law require data collected about Chinese citizens to remain within Chinese borders. Even Apple had to comply: the company built a dedicated data center in Guizhou, managed by a state-owned enterprise, specifically for iCloud data belonging to mainland China users. If your product serves Chinese users, a local deployment is not optional. It is a legal requirement enforced at the corporate level.",
+    sources: [
+      { label: "China's Data Security Law, effective September 1, 2021", url: "https://www.china-briefing.com/news/chinas-data-security-law-a-final-review/" },
+      { label: "Apple iCloud data in China operated by GCBD", url: "https://support.apple.com/en-us/111755" },
+    ],
   },
   {
     tag: "Russia · 2015",
     title: "Russia Data Localization Law",
     body: "Russia's Federal Law No. 242-FZ required all personal data of Russian citizens to be stored and processed on servers physically located within Russia. LinkedIn refused to comply. Roskomnadzor, the Russian communications regulator, blocked the service entirely in September 2016. LinkedIn remains blocked in Russia to this day. The case illustrates that data localization laws are actively enforced and the cost of non-compliance is market exclusion.",
+    sources: [
+      { label: "Federal Law No. 242-FZ, September 1, 2015", url: "https://www.dataguidance.com/notes/russia-data-localization" },
+      { label: "LinkedIn blocked in Russia, November 2016 (BBC)", url: "https://www.bbc.com/news/technology-38014501" },
+    ],
   },
   {
     tag: "US Healthcare",
     title: "HIPAA and AI Providers",
     body: "HIPAA requires covered entities to sign a Business Associate Agreement (BAA) with any third party that processes Protected Health Information. Most AI API providers do not offer BAAs that satisfy HIPAA requirements for clinical data. This means a hospital cannot legally send patient records, clinical notes, or diagnostic data to OpenAI or similar services without significant legal exposure. For healthcare AI, on-prem inference is not a preference. It is the only compliant option.",
+    sources: [
+      { label: "HIPAA Privacy Rule, 45 CFR Part 160 and Part 164", url: "https://www.hhs.gov/hipaa/for-professionals/privacy/index.html" },
+      { label: "Business Associate Agreements under HIPAA", url: "https://www.hhs.gov/hipaa/for-professionals/covered-entities/sample-business-associate-agreement-provisions/index.html" },
+    ],
   },
   {
     tag: "US Defense",
     title: "ITAR and Classified Networks",
     body: "The International Traffic in Arms Regulations govern the export of defense-related materials and technical data. Any AI system processing ITAR-controlled information must operate on infrastructure with no path to unauthorized disclosure. Classified and controlled unclassified networks are air-gapped by requirement. Cloud AI APIs are categorically incompatible with this environment. Zero egress is not an architectural preference in defense contexts. It is a federal legal requirement.",
+    sources: [
+      { label: "ITAR, 22 CFR Parts 120-130 (eCFR)", url: "https://www.ecfr.gov/current/title-22/chapter-I/subchapter-M" },
+      { label: "NIST: ITAR Compliance for Cloud Computing", url: "https://www.nist.gov/system/files/documents/2022/02/02/ITAR-Cloud-Computing.pdf" },
+    ],
   },
   {
     tag: "Saudi Arabia · 2023",
     title: "Saudi NDMO Data Residency",
     body: "Saudi Arabia's National Data Management Office issued regulations requiring government data to be processed within the Kingdom. Major consulting firms and technology vendors operating under Saudi government contracts built local data centers and on-prem deployments specifically to remain eligible for these contracts. As Gulf Cooperation Council countries strengthen data sovereignty frameworks, on-prem AI deployments are increasingly a prerequisite for government and enterprise contracts in the region.",
+    sources: [
+      { label: "Saudi Arabia National Data Management Office", url: "https://ndmo.gov.sa/en" },
+      { label: "PDPL Personal Data Protection Law, effective September 2023", url: "https://sdaia.gov.sa/en/SDAIA/aboutSDIA/Documents/PersonalDataProtectionLaw.pdf" },
+    ],
   },
 ];
 
@@ -906,9 +938,9 @@ const TREE_INFERENCE = {
         { label: "Data center (A100 / H100)", next: "vllm" },
       ],
     },
-    ollama: { result: "Ollama", color: G.green, detail: "Best for small teams and development. Zero-config, single pull command, OpenAI-compatible API. Handles GPU memory and model loading automatically. Not optimized for concurrent load." },
-    llamaserver: { result: "llama-server (llama.cpp)", color: G.cyan, detail: "Best for mid-scale deployments on consumer hardware. Maximum tokens/second on a single GPU, fine-grained memory control, native Anthropic Messages API. Run with --parallel 4 for concurrency." },
-    vllm: { result: "vLLM", color: G.purple, detail: "Best for production multi-user workloads on data center GPUs. PagedAttention eliminates memory fragmentation, continuous batching maximizes throughput, native multi-LoRA support for tenant isolation." },
+    ollama: { result: "Ollama", color: G.green, url: "https://ollama.ai/", detail: "Best for small teams and development. Zero-config, single pull command, OpenAI-compatible API. Handles GPU memory and model loading automatically. Not optimized for concurrent load." },
+    llamaserver: { result: "llama-server (llama.cpp)", color: G.cyan, url: "https://github.com/ggerganov/llama.cpp", detail: "Best for mid-scale deployments on consumer hardware. Maximum tokens/second on a single GPU, fine-grained memory control, native Anthropic Messages API. Run with --parallel 4 for concurrency." },
+    vllm: { result: "vLLM", color: G.purple, url: "https://docs.vllm.ai/en/latest/", detail: "Best for production multi-user workloads on data center GPUs. PagedAttention eliminates memory fragmentation, continuous batching maximizes throughput, native multi-LoRA support for tenant isolation." },
   },
 };
 
@@ -938,9 +970,9 @@ const TREE_KUBERNETES = {
         { label: "No, single-tenant", next: "compose_monitored" },
       ],
     },
-    compose_simple: { result: "Docker Compose", color: G.green, detail: "Simple, fast, sufficient. One YAML file to define all services. No scheduler overhead. Use when you have a small service count and a single server." },
-    compose_monitored: { result: "Docker Compose + Prometheus/Grafana", color: G.cyan, detail: "Docker Compose for orchestration, Prometheus and Grafana for visibility. Add cAdvisor for container metrics. A practical production setup for single-server multi-service deployments." },
-    kubernetes: { result: "Kubernetes", color: G.purple, detail: "Required for multi-GPU scheduling, tenant isolation at the pod level, automatic failover, and horizontal scaling. Use the NVIDIA GPU Operator for automated driver and resource management. Accept the operational complexity as the cost of scale." },
+    compose_simple: { result: "Docker Compose", color: G.green, url: "https://docs.docker.com/compose/", detail: "Simple, fast, sufficient. One YAML file to define all services. No scheduler overhead. Use when you have a small service count and a single server." },
+    compose_monitored: { result: "Docker Compose + Prometheus/Grafana", color: G.cyan, url: "https://docs.docker.com/compose/", detail: "Docker Compose for orchestration, Prometheus and Grafana for visibility. Add cAdvisor for container metrics. A practical production setup for single-server multi-service deployments." },
+    kubernetes: { result: "Kubernetes", color: G.purple, url: "https://docs.nvidia.com/datacenter/cloud-native/gpu-operator/latest/index.html", detail: "Required for multi-GPU scheduling, tenant isolation at the pod level, automatic failover, and horizontal scaling. Use the NVIDIA GPU Operator for automated driver and resource management. Accept the operational complexity as the cost of scale." },
   },
 };
 
@@ -977,10 +1009,10 @@ const TREE_VECTORDB = {
         { label: "No, single node is fine", next: "qdrant" },
       ],
     },
-    chroma: { result: "ChromaDB", color: G.green, detail: "Best for prototyping and small-scale deployments. In-process Python library or lightweight server. No separate infrastructure to manage. Swap to Qdrant when you outgrow it with minimal code changes." },
-    pgvector: { result: "pgvector", color: G.blue, detail: "Best when you are already operating PostgreSQL and want to minimize infrastructure sprawl. Adds vector similarity search as a SQL column type. Join vector results against relational metadata in a single query." },
-    qdrant: { result: "Qdrant", color: G.cyan, detail: "Best all-around choice for production deployments. Rust-based, fast, supports rich metadata payload filtering, sparse vectors for hybrid search, named collections for namespace isolation. Apache 2.0 licensed. Self-hostable." },
-    milvus: { result: "Milvus", color: G.purple, detail: "Best for massive scale requiring distributed clustering. Supports 100M+ vectors across a cluster of nodes. More operational complexity than Qdrant. Apache 2.0 licensed." },
+    chroma: { result: "ChromaDB", color: G.green, url: "https://docs.trychroma.com/", detail: "Best for prototyping and small-scale deployments. In-process Python library or lightweight server. No separate infrastructure to manage. Swap to Qdrant when you outgrow it with minimal code changes." },
+    pgvector: { result: "pgvector", color: G.blue, url: "https://github.com/pgvector/pgvector", detail: "Best when you are already operating PostgreSQL and want to minimize infrastructure sprawl. Adds vector similarity search as a SQL column type. Join vector results against relational metadata in a single query." },
+    qdrant: { result: "Qdrant", color: G.cyan, url: "https://qdrant.tech/documentation/", detail: "Best all-around choice for production deployments. Rust-based, fast, supports rich metadata payload filtering, sparse vectors for hybrid search, named collections for namespace isolation. Apache 2.0 licensed. Self-hostable." },
+    milvus: { result: "Milvus", color: G.purple, url: "https://milvus.io/docs", detail: "Best for massive scale requiring distributed clustering. Supports 100M+ vectors across a cluster of nodes. More operational complexity than Qdrant. Apache 2.0 licensed." },
   },
 };
 
@@ -996,6 +1028,13 @@ const COMPARE_TABLES = [
       { cols: ["GTE-large", "1024", "Yes", "Fast", "Balanced performance. Good default when BGE-M3 is too heavy."] },
     ],
     headers: ["Model", "Dimensions", "Multilingual", "Speed", "Best For"],
+    sources: [
+      { label: "nomic-embed-text-v1.5 (HuggingFace)", url: "https://huggingface.co/nomic-ai/nomic-embed-text-v1.5" },
+      { label: "BGE-M3 (HuggingFace)", url: "https://huggingface.co/BAAI/bge-m3" },
+      { label: "E5-large-v2 (HuggingFace)", url: "https://huggingface.co/intfloat/e5-large-v2" },
+      { label: "GTE-large (HuggingFace)", url: "https://huggingface.co/thenlper/gte-large" },
+      { label: "VRAM calculation: FP16 = params x 2 bytes, Q4 = params x 0.5 bytes", url: "https://huggingface.co/docs/transformers/main/en/quantization/overview" },
+    ],
   },
   {
     title: "LLM Models for On-Prem",
@@ -1006,6 +1045,12 @@ const COMPARE_TABLES = [
       { cols: ["Phi-3 Medium", "14B", "28GB FP16", "~8GB Q4", "Resource-constrained deployments. Capable above its size class."] },
     ],
     headers: ["Model", "Parameters", "Min VRAM (FP16)", "Quantized VRAM (Q4)", "Best For"],
+    sources: [
+      { label: "Llama 3.3 70B Instruct (HuggingFace)", url: "https://huggingface.co/meta-llama/Llama-3.3-70B-Instruct" },
+      { label: "Qwen 2.5 72B Instruct (HuggingFace)", url: "https://huggingface.co/Qwen/Qwen2.5-72B-Instruct" },
+      { label: "Mistral Large Instruct 2411 (HuggingFace)", url: "https://huggingface.co/mistralai/Mistral-Large-Instruct-2411" },
+      { label: "Phi-3 Medium 128k Instruct (HuggingFace)", url: "https://huggingface.co/microsoft/Phi-3-medium-128k-instruct" },
+    ],
   },
   {
     title: "Vector Databases",
@@ -1016,6 +1061,12 @@ const COMPARE_TABLES = [
       { cols: ["Milvus", "Apache 2.0", "Yes", "Yes", "Massive scale (100M+ vectors) requiring clustering."] },
     ],
     headers: ["Database", "License", "Clustering", "Hybrid Search", "Best For"],
+    sources: [
+      { label: "Qdrant documentation", url: "https://qdrant.tech/documentation/" },
+      { label: "ChromaDB documentation", url: "https://docs.trychroma.com/" },
+      { label: "pgvector (GitHub)", url: "https://github.com/pgvector/pgvector" },
+      { label: "Milvus documentation", url: "https://milvus.io/docs" },
+    ],
   },
 ];
 
@@ -1252,6 +1303,9 @@ function ToolCard({ t, accent }) {
       <div className="tool-header">
         <span className="tool-name">{t.name}</span>
         <span className="tool-role" style={{ background: accent + "18", color: accent, border: `1px solid ${accent}40` }}>{t.role}</span>
+        {t.url && (
+          <a href={t.url} className="tool-docs-link" target="_blank" rel="noopener noreferrer">docs</a>
+        )}
       </div>
       <div className="tool-what">{t.what}</div>
       <div className="tool-why"><b>Why this over alternatives: </b>{t.why}</div>
@@ -1351,7 +1405,18 @@ function CaseCard({ c }) {
         <span className="case-title">{c.title}</span>
         <span style={{ marginLeft: "auto", fontSize: 14, color: G.muted, transition: "transform .2s", transform: open ? "rotate(180deg)" : "none", flexShrink: 0 }}>▾</span>
       </div>
-      {open && <div className="case-body">{c.body}</div>}
+      {open && (
+        <div className="case-body">
+          {c.body}
+          {c.sources && c.sources.length > 0 && (
+            <div className="case-sources">
+              {c.sources.map((s, i) => (
+                <a key={i} href={s.url} target="_blank" rel="noopener noreferrer">{s.label}</a>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -1394,6 +1459,9 @@ function DecisionTree({ tree }) {
         <>
           <div className="decision-result" style={{ background: node.color + "14", border: `1px solid ${node.color}40`, color: node.color }}>
             Recommendation: {node.result}
+            {node.url && (
+              <a href={node.url} className="tool-docs-link" target="_blank" rel="noopener noreferrer" style={{ marginLeft: 10 }}>docs</a>
+            )}
           </div>
           <div style={{ marginTop: 10, fontSize: 13, color: G.muted, lineHeight: 1.65 }}>{node.detail}</div>
           <button type="button" className="decision-back" onClick={() => setStep(tree.start)}>Start over</button>
@@ -1445,6 +1513,13 @@ function CompareTableBlock({ table }) {
           ))}
         </tbody>
       </table>
+      {table.sources && table.sources.length > 0 && (
+        <div className="table-sources">
+          Sources: {table.sources.map((s, i) => (
+            <span key={i}>{i > 0 ? " · " : ""}<a href={s.url} target="_blank" rel="noopener noreferrer">{s.label}</a></span>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
