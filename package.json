@@ -1,7 +1,13 @@
 {
   "name": "zero-egress",
-  "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "description": "Interactive architecture deep-dive for zero-egress AI systems",
+  "author": "Mr. Primo <hello@primo.engineering>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jcprimo/zero-egress"
+  },
   "type": "module",
   "scripts": {
     "dev": "vite",

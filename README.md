@@ -4,17 +4,22 @@ Interactive architecture deep-dive for zero-egress AI systems. Built with React 
 
 ## What This Is
 
-An interactive, educational visualization of enterprise AI architecture patterns focused on data sovereignty and zero-egress design. Two architecture approaches are explored side by side:
+An interactive, educational visualization of enterprise AI architecture patterns focused on data sovereignty and zero-egress design. Two architectures are presented side by side, each broken down layer by layer with implementation steps, code examples, and tooling recommendations.
 
-1. **Cloud-Native RAG Pipeline** (Kafka, vector DB, embedding engine, LLM orchestrator)
-2. **Zero-Egress Architecture** (all processing stays on-premises, no data leaves the network)
+## What's Inside
 
-Each layer is broken down with implementation steps, code examples, and tooling recommendations.
+**ARIA** (Anthropic RAG Intelligence Architecture) -- the cloud-native reference stack. Uses Kafka for event streaming, a vector database for retrieval, an embedding engine, and an LLM orchestrator. Designed for teams that want a production-grade AI pipeline with managed cloud services.
+
+**LocalMind** -- the zero-egress on-premises architecture. All inference, embedding, and retrieval runs inside your network. No data leaves. Built around llama.cpp, local vector stores, and self-hosted tooling. Designed for enterprise buyers who require full data sovereignty.
+
+## Business Model Context
+
+LocalMind targets enterprises that cannot send data to third-party APIs due to compliance, legal, or competitive constraints. The commercial model is on-premises install, onboarding and training, and ongoing support -- not SaaS. ARIA serves as the reference architecture for teams that do not have those constraints.
 
 ## Stack
 
 - React 19
-- Vite 6
+- Vite 8
 - No external UI libraries (custom CSS-in-JS via style injection)
 - Fonts: DM Sans, Syne, IBM Plex Mono (Google Fonts)
 
@@ -33,10 +38,6 @@ Opens at http://localhost:5173
 npm run build
 npm run preview
 ```
-
-## Project Status
-
-Active development. This is a Primo Engineering project.
 
 ## Author
 

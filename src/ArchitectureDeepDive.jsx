@@ -262,8 +262,8 @@ cmake --build llama.cpp/build --config Release -j
 ./llama.cpp/llama-server \
   --model ./models/qwen3-coder-q4.gguf \
   --port 8080 --ctx-size 32768 \
-  --n-gpu-layers 99 \   <span style="color:#2a4a60"># offload all layers to GPU</span>
-  --parallel 4 \        <span style="color:#2a4a60"># handle 4 concurrent requests</span>
+  --n-gpu-layers 99 \\   <span style="color:#2a4a60"># offload all layers to GPU</span>
+  --parallel 4 \\        <span style="color:#2a4a60"># handle 4 concurrent requests</span>
   --flash-attn          <span style="color:#2a4a60"># faster attention mechanism</span>`},
       {title:"Point your app at the local endpoint via env vars",desc:"Your entire stack switches between local and cloud inference by changing two environment variables — zero code changes.",
        code:`<span style="color:#2a4a60"># .env — local inference mode</span>
@@ -831,7 +831,7 @@ function Layer({ layer, index }) {
   );
 }
 
-export default function App() {
+export default function ArchitectureDeepDive() {
   const [arch, setArch] = useState("aria");
   const layers = arch === "aria" ? ARCH1 : ARCH2;
 
